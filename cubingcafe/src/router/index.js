@@ -45,6 +45,12 @@ const router = new VueRouter({
       meta: { title: 'MyProfile | CubingCafe' }
     },
     {
+      path: '/versus',
+      name: 'versus',
+      component: () => import('../views/Versus.vue'),
+      meta: { title: 'Versus | CubingCafe' }
+    },
+    {
       path: '*',
       redirect: '/'
     }

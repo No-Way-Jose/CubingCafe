@@ -1,7 +1,8 @@
 .DS_Store
 node_modules
 /dist
-
+*.crt
+*.key
 
 # local env files
 .env.local

@@ -128,6 +128,8 @@
 
 <script>
 import { auth, googleAuth } from '../main'
+import { api } from '../js/api.js'
+
 export default {
   name: 'Login',
   data () {
@@ -157,6 +159,8 @@ export default {
       })
     },
     login (firstLogin) {
+      const res = api.signin(this.userCredentials.email.substring(0, this.userCredentials.email.indexOf('@')), this.userCredentials.password)
+      console.log(res)
       auth.signInWithEmailAndPassword(this.userCredentials.email, this.userCredentials.password)
         .then(data => {
           this.$router.push('/')
@@ -168,6 +172,8 @@ export default {
         })
     },
     signUp () {
+      const res = api.signup(this.userCredentials.email.substring(0, this.userCredentials.email.indexOf('@')), this.userCredentials.password)
+      console.log(res)
       auth.createUserWithEmailAndPassword(this.userCredentials.email, this.userCredentials.password)
         .then(data => {
           this.login(true)
