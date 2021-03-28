@@ -1,4 +1,6 @@
 const ObjectId = require('mongodb').ObjectId
+const scrambler = require('scramby')()
+
 module.exports = (io, queue, users, matches) => {
   const queueError = (socket) => {
     socket.emit('QueueError', 'Internal queueing error')
@@ -76,6 +78,7 @@ module.exports = (io, queue, users, matches) => {
                   user1Win: winElo,
                   user2Win: lossElo,
                   completed: false,
+                  scramble: scrambler.getRandomScramble(),
                   createdDate: new Date()
                 }, {}, (err, result) => {
                   if (err) return queueError(socket)

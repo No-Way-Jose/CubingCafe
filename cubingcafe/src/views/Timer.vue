@@ -100,9 +100,6 @@ export default {
   computed: {
     countdownTime: function () {
       return this.duration * 1000
-    },
-    cubeURL: function () {
-      return 'http://cube.rider.biz/visualcube.php?fmt=svg&size=350&pzl=' + this.selectedSize[0] + '&alg=' + this.scramble.replace(' ', '')
     }
   },
   methods: {

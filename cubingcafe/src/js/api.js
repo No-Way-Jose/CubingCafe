@@ -23,7 +23,7 @@ const api = (function () {
   let queueSocket = null
 
   let localStream = null
-  const localStreamListeners = []
+  let localStreamListeners = []
 
   let videoConnections = []
   let dataConnections = []
@@ -33,6 +33,7 @@ const api = (function () {
   }
 
   const getLocalStream = (cb = () => {}) => {
+    console.log(localStream)
     if (localStream) {
       return cb(localStream)
     }
@@ -41,17 +42,19 @@ const api = (function () {
       navigator.mediaDevices.getUserMedia({ audio: false, video: true })
         .then((stream) => {
           localStream = stream
+          console.log(localStreamListeners)
           notifyLocalStreamListeners()
-          cb(localStream)
+          //cb(localStream)
         })
         .catch((e) => {
+          console.log(e.name, e.message)
           cb(localStream)
-          console.log(e)
         })
     }
   }
 
   module.onLocalStreamUpdate = (listener) => {
+    console.log('streamUpdate', listener)
     localStreamListeners.push(listener)
     getLocalStream(() => {})
   }
@@ -152,7 +155,6 @@ const api = (function () {
       /* answer the call, this happens when we sit in queue
           waiting for an opponent */
       peer.on('call', (incoming) => {
-        console.log('ON CALL')
         getLocalStream((stream) => {
           incoming.answer(stream)
         })
@@ -169,14 +171,12 @@ const api = (function () {
     })
 
     queueSocket.on('error', (err) => {
-      console.log('QUEUE ERROR')
       console.error(err)
       queueSocket.disconnect()
       peer.disconnect()
     })
 
     queueSocket.on('match', (match) => {
-      console.log('IN MATCH')
       const peerUser = match.user2PeerId
       getLocalStream((ls) => {
         const peerStream = peer.call(peerUser, ls)
@@ -238,6 +238,14 @@ const api = (function () {
     dataConnections = []
     videoConnections = []
     notifyMatchListeners({ action: 7 }) // disconnected from match
+  }
+
+  module.stopCamera = () => {
+    localStream.getTracks().forEach(track => track.stop())
+    dataConnections = []
+    videoConnections = []
+    localStreamListeners = []
+    localStream = null
   }
 
   module.signin = function (username, password) {

@@ -18,12 +18,7 @@ const https = require('https')
 const http = require('http')
 const fs = require('fs')
 
-const privateKey = fs.readFileSync('server.key')
-const certificate = fs.readFileSync('server.crt')
-const config = {
-  key: privateKey,
-  cert: certificate
-}
+
 
 const cookie = require('cookie')
 const session = require('express-session')
@@ -170,6 +165,12 @@ MongoClient.connect(mongoUrl, (err, client) => {
 
 let server
 if (!process.env.PORT) {
+  const privateKey = fs.readFileSync('server.key')
+  const certificate = fs.readFileSync('server.crt')
+  const config = {
+    key: privateKey,
+    cert: certificate
+  }
   // for localhost b/c https is required for camera to work when connecting over LAN
   console.log('here')
   server = https.createServer(config, app).listen(8080, (err) => {

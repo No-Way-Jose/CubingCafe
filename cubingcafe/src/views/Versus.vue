@@ -1,17 +1,6 @@
 <template>
   <v-container class="versusContainer">
     <v-col>
-      <v-row ref="statusRow" v-bind:class="{ hidden: waiting }">
-        <v-col>
-          <div ref="userReady" class="ready-label">Not Ready</div>
-          <div ref="userStopwatch" class="hidden timeFont"></div>
-        </v-col>
-        <v-col>
-          <div ref="opponentReady" class="ready-label">Not Ready</div>
-          <div ref="oppStopwatch" class="hidden timeFont"></div>
-        </v-col>
-      </v-row>
-
       <v-row ref=videoGrid>
         <v-col cols="6">
           <video playsinline autoplay muted ref="localVideo"></video>
@@ -23,22 +12,25 @@
         <v-col v-else ref="oppVideo" cols="6"></v-col>
       </v-row>
 
-      <v-row ref="scrambleRow" class="hidden">
+      <v-row ref="scrambleRow" class="scrambleRow">
         <v-col cols="3" class="scrambleCol" align-self="center">
-          <v-btn large rounded outlined color="green" v-bind:disabled="!scramble.confirmed">My Scramble is good!</v-btn>
+          <v-btn v-if="!readyBtn.userStarted" large rounded v-bind:color="scramble.myScramble" v-bind:disabled="!scramble.confirmed">{{ readyBtn.userReady }}</v-btn>
+          <div ref="userStopwatch" class="timeFont"></div>
         </v-col>
         <v-col cols="6" class="scrambleCol">
           <v-row justify="center"><h1>Match Scramble:</h1></v-row>
           <v-row justify="center" class="pb-5">{{ scramble.moves }}</v-row>
+          <v-row justify="center" v-if="showStart" class="py-4"><h2>Release spacebar to start your timer!</h2></v-row>
           <span ref="scrambleImage"></span>
+          <v-row justify="center" ref="countdown" class="countdown"></v-row>
         </v-col>
         <v-col cols="3" class="scrambleCol" align-self="center">
-          <v-btn large rounded outlined v-bind:color="scramble.oppScramble" @click="confirmScramble">Your Scramble is good!</v-btn>
+          <v-btn v-if="!readyBtn.oppStarted" large rounded v-bind:color="scramble.oppScramble" @click="confirmScramble">{{ readyBtn.oppReady }}</v-btn>
+          <div ref="oppStopwatch" class="timeFont"></div>
         </v-col>
       </v-row>
 
-      <v-row ref='countdown' class='hidden'></v-row>
-      <v-row class="matchControls">
+      <v-row class="matchControls" justify="center">
         <v-btn ref="connect" @click="connect" v-if="waiting">Find Match</v-btn>
         <v-btn ref="disconnect" @click="disconnect" v-if="!waiting">Disconnect</v-btn>
       </v-row>
@@ -58,7 +50,9 @@ export default {
   data: () => ({
     waiting: true,
     keysPressed: {},
-    scramble: { moves: '', confirmed: false, oppScramble: 'primary' },
+    showStart: false,
+    readyBtn: { userReady: 'My Scramble is good!', userStarted: false, oppReady: 'Your Scramble is good!', oppStarted: false},
+    scramble: { moves: '', confirmed: false, oppScramble: 'red', myScramble: 'primary' },
     initialConnection: true,
     playerState: {},
     confirmed: false,
@@ -73,6 +67,13 @@ export default {
     opponentVideo: null,
     rules: ['• No Profanity', '• Some other stuff', '• Even more stuff', '• Lol sure more rules', '• idk..', '• last one...']
   }),
+  ready () {
+    this.matchSetup()
+  },
+  beforeRouteLeave (to, from, next) {
+    api.stopCamera()
+    next()
+  },
   created () {
     window.addEventListener('keydown', this.keyDown)
     window.addEventListener('keyup', this.keyUp)
@@ -86,17 +87,19 @@ export default {
   },
   methods: {
     matchSetup () {
+      console.log(this.$refs.localVideo)
+      console.log('setup', this.localStreamUpdate)
       this.timer = new utils.Stopwatch(this.$refs.userStopwatch)
       this.opponentTimer = new utils.Stopwatch(this.$refs.oppStopwatch)
       this.currUser = this.$store.state.user.displayName
       api.onLocalStreamUpdate(this.localStreamUpdate);
     },
     keyDown (event) {
-      event.preventDefault()
       if (this.keysPressed[event.code]) return
       this.keysPressed[event.code] = true
       switch (event.code) {
         case 'Space':
+          event.preventDefault()
           if (this.solveComplete) return
           if (this.timer.running()) {
             this.solveComplete = true
@@ -113,13 +116,18 @@ export default {
       }
     },
     keyUp (event) {
-      event.preventDefault()
       this.keysPressed[event.code] = false
       switch (event.code) {
         case 'Space':
+          event.preventDefault()
           if (this.solveComplete) return
           if (this.startOnRelease) {
-            this.$refs.userStopwatch.className = this.$refs.userStopwatch.className.replace('hidden', '')
+            this.$refs.scrambleImage.style.display = 'block'
+            this.showStart = false
+            this.$refs.countdown.style.display = 'none'
+            this.$refs.userStopwatch.style.display = 'block'
+            this.readyBtn.userStarted = true
+            // this.$refs.userStopwatch.className = this.$refs.userStopwatch.className.replace('hidden', '')
             api.sendStarted()
             this.timer.start()
             this.startOnRelease = false
@@ -130,41 +138,53 @@ export default {
           break
       }
     },
-    fetchScramble () {
-      const scrambler = scramby(this.selectedSize)
-      const state = scrambler.getRandomScramble()
-      this.scramble.moves = state.scrambleString
-      scrambler.drawScramble(this.$refs.scrambleImage, state.state, 500, 250)
-      this.$refs.scrambleRow.className = this.$refs.scrambleRow.className.replace('hidden', '')
+    fetchScramble (scramble) {
+      console.log(scramble)
+      const scrambler = scramby()
+      this.scramble.moves = scramble.scrambleString
+      scrambler.drawScramble(this.$refs.scrambleImage, scramble.state, 500, 250)
+      this.$refs.scrambleRow.style.display = 'flex'
     },
     setReady (user, ready) {
-      const elm = this.$refs[`${user}Ready`]
       this.playerState[user] = ready
       if (ready) {
-        elm.className += 'ready'
-        elm.innerHTML = 'Ready'
+        if (user === 'user') {
+          this.readyBtn.userReady = 'Ready !'
+          this.scramble.myScramble = 'green'
+        } else {
+          this.readyBtn.oppReady = 'Ready !'
+          this.scramble.oppScramble = 'green'
+        }
       } else {
-        elm.className.replace('/\bready\b/g', '')
-        elm.innerHTML = 'Not Ready'
+        if (user === 'user') {
+          this.readyBtn.userReady = 'Not Ready ...'
+          this.scramble.myScramble = 'primary'
+        } else {
+          this.readyBtn.oppReady = 'Not Ready ...'
+          this.scramble.oppScramble = 'primary'
+        }
       }
 
       const cntdElm = this.$refs.countdown
       if (this.playerState.user && this.playerState.opponent) {
         let seconds = 5
         cntdElm.innerHTML = seconds
-        cntdElm.className.replace('hidden', '')
+        this.$refs.scrambleImage.style.display = 'none'
+        cntdElm.style.display = 'block'
         this.matchCountdown = setInterval(() => {
           seconds = seconds - 1
           cntdElm.innerHTML = seconds
           if (seconds <= 0) {
-            cntdElm.innerHTML = 'Release spacebar to start your timer'
+            this.showStart = true;
+            // cntdElm.innerHTML = 'Release spacebar to start your timer'
             clearInterval(this.matchCountdown)
             this.startOnRelease = true
           }
         }, 1000)
       } else {
+        this.$refs.scrambleImage.style.display = 'block'
         this.startOnRelease = false
-        cntdElm.className += 'hidden'
+        cntdElm.style.display = 'none'
         clearInterval(this.matchCountdown)
       }
     },
@@ -174,15 +194,13 @@ export default {
         if (user === 'user') {
           this.scramble.confirmed = true
         } else {
-          this.scramble.oppScramble = 'green'
+          this.scramble.oppScramble = 'primary'
         }
       }
     },
     confirmScramble () {
-      console.log('Confirmed scramble!')
       this.setConfirmed('opponent', true);
       api.sendCfmScramble();
-      this.$refs.confirmOppScramble.className += 'hidden';
     },
     setMatchDetails (match, userKey, opponentKey) {
       this.opponentUsername = match[`${opponentKey}`]
@@ -203,7 +221,7 @@ export default {
     },
     disconnect () {
       api.disconnect()
-      this.$refs.connect.className = this.$refs.connect.className.replace('hidden', '')
+      this.waiting = true
       if (this.opponentVideo) this.opponentVideo.remove()
       this.playerState = {}
       this.confirmed = false
@@ -216,6 +234,12 @@ export default {
       this.setReady('user', false)
       this.setConfirmed('opponent', false)
       this.setConfirmed('user', false)
+      this.showStart = false
+      this.readyBtn = { userReady: 'My Scramble is good!', userStarted: false, oppReady: 'Your Scramble is good!', oppStarted: false}
+      this.scramble = { moves: '', confirmed: false, oppScramble: 'red', myScramble: 'primary' }
+      this.$refs.scrambleRow.style.display = 'none'
+      this.$refs.oppStopwatch.style.display = 'none'
+      this.$refs.userStopwatch.style.display = 'none'
     },
     handleMatchUpdates (obj) {
       switch (obj.action) {
@@ -228,9 +252,8 @@ export default {
           this.opponentVideo.id = obj.data.id
           this.opponentVideo.srcObject = obj.data.stream
           this.opponentVideo.autoplay = true
-          this.opponentVideo.style = 'width: 100%; height: 40vh; object-fit: cover;'
+          this.opponentVideo.style = 'width: 100%; height: 40vh; object-fit: cover; border-radius: 10px;'
           this.$refs.oppVideo.append(this.opponentVideo)
-          this.fetchScramble()
           break
         case 2: // disconnected from an opponent
           console.log('Opponent DISCONNECTED removing video stream')
@@ -248,7 +271,9 @@ export default {
               this.setConfirmed('user', true)
               break
             case 'StartedSolving':
-              this.$refs.oppStopwatch.className = this.$refs.oppStopwatch.className.replace('hidden', '')
+              this.$refs.oppStopwatch.style.display = 'block'
+              this.readyBtn.oppStarted = true
+              // this.$refs.oppStopwatch.className = this.$refs.oppStopwatch.className.replace('hidden', '')
               this.opponentTimer.start()
               break
             case 'Solved':
@@ -265,13 +290,13 @@ export default {
               } else {
                 this.setMatchDetails(obj.data.match, 'user2', 'user1')
               }
+              this.fetchScramble(obj.data.match.scramble)
               api.emitMatched(this.matchDetails._id)
               break
           }
           break
         case 5: // left queue
-          this.$refs.disconnect.className += 'hidden'
-          this.$refs.connect.className = this.$refs.connect.className.replace('hidden', '')
+          this.waiting = true
           break
         case 6: // match completed, result received from server
           console.log('match registered with server can do something here later')
@@ -288,7 +313,7 @@ export default {
 </script>
 
 <style scoped>
-  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
   .versusContainer {
     max-width: 1400px;
     padding: 20px 50px 0 50px;
@@ -297,6 +322,7 @@ export default {
     width: 100%;
     height: 40vh;
     object-fit: cover;
+    border-radius: 10px;
   }
   .hidden {
     visibility: hidden;
@@ -305,10 +331,18 @@ export default {
     text-align: center;
   }
   .timeFont {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Roboto Mono', monospace;
     font-weight: bold;
     font-size: 3vw;
     text-align: center;
+    display: none;
+  }
+  .countdown {
+    font-size: 8vw;
+    display: none;
+  }
+  .scrambleRow {
+    display: none;
   }
 
 </style>

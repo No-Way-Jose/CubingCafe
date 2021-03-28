@@ -58,17 +58,19 @@
 </template>
 
 <script>
+import solver from 'rubiks-cube-solver'
+
 export default {
   name: 'Solver',
   data: () => ({
     selectedColour: 'redBlock',
     colours: {
-      2: { class: 'whiteBlock' },
-      5: { class: 'orangeBlock' },
-      6: { class: 'greenBlock' },
-      7: { class: 'redBlock' },
-      8: { class: 'blueBlock' },
-      10: { class: 'yellowBlock' }
+      6: { class: 'greenBlock', idx: 0 },
+      7: { class: 'redBlock', idx: 1 },
+      2: { class: 'whiteBlock', idx: 2 },
+      10: { class: 'yellowBlock', idx: 3 },
+      5: { class: 'orangeBlock', idx: 4 },
+      8: { class: 'blueBlock', idx: 5 },
     },
     instructions: [0, 1, 2, 3, 4],
     items: 5
@@ -78,16 +80,49 @@ export default {
       this.$refs[block][0].className = 'block ' + this.selectedColour
     },
     solve () {
-      const map = { whiteBlock: 1, orangeBlock: 2, greenBlock: 3, redBlock: 4, blueBlock: 5, yellowBlock: 6 }
-      const data = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] }
-      let counter = 1
+      const map = { white: 'u', orange: 'l', green: 'f', red: 'r', blue: 'b', yellow: 'd' }
+      const data = ['', '', '', '', '', '']
+
+      console.log(Object.keys(this.colours))
       for (const key in this.colours) {
         for (let i = 1; i < 10; i++) {
           const block = String(key) + '-' + String(i)
-          data[counter].push(map[this.$refs[block][0].className.substring(6).trim()])
+          data[this.colours[key].idx] += (map[this.$refs[block][0].className.substring(6).replaceAll('Block','').trim()])
         }
-        counter++
       }
+      const x = ["flulfbddr", "rudrruddl", "dbbburrfb", "llffdrubf", "rludlubrf", "lubfbfudl"]
+      console.log(data.join(''))
+      let solution = JSON.parse(JSON.stringify(solver(x.join(''), { partitioned: true })))
+      // Reformat solution
+      const reverseMap = { 'R': 'L', 'L': 'R', 'U': 'D', 'D': 'U', 'd': 'u', 'u': 'd' }
+      for (const step in solution) {
+        if (step === 'cross' || step === 'f2l') {
+          for (let j=0; j<solution[step].length; j++) {
+            let str = solution[step][j]
+            console.log(str)
+            for (let i=0; i<str.length; i++) {
+              str[i] = reverseMap[str[i]] ? reverseMap[str[i]] : str[i]
+            }
+            console.log(solution)
+            /*
+            str.replaceAll('prime', "'")
+            const splitString = str.split(' ')
+            let translated = splitString.map((move) => {
+              const reverseMap = { 'R': 'L', 'L': 'R', 'U': 'D', 'D': 'U', 'd': 'u', 'u': 'd' }
+              let ret = ''
+              ret = reverseMap[move[0]] ? reverseMap[move[0]] : move[0]
+              if (move.length === 2) ret += move[1]
+              return ret
+            })
+            translated
+            */
+
+          }
+        } else {
+
+        }
+      }
+      console.log(solution)
     },
     reset () {
       for (const key in this.colours) {

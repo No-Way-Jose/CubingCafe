@@ -52,7 +52,7 @@ const utils = (function () {
     }
 
     function render () {
-      timer.innerHTML = clock / 1000
+      timer.innerHTML = (clock / 1000).toFixed(3)
     }
 
     function delta () {
