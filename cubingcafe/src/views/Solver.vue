@@ -92,37 +92,27 @@ export default {
       }
       const x = ["flulfbddr", "rudrruddl", "dbbburrfb", "llffdrubf", "rludlubrf", "lubfbfudl"]
       console.log(data.join(''))
-      let solution = JSON.parse(JSON.stringify(solver(x.join(''), { partitioned: true })))
+      let solution = solver(x.join(''), { partitioned: true })
       // Reformat solution
       const reverseMap = { 'R': 'L', 'L': 'R', 'U': 'D', 'D': 'U', 'd': 'u', 'u': 'd' }
       for (const step in solution) {
         if (step === 'cross' || step === 'f2l') {
-          for (let j=0; j<solution[step].length; j++) {
-            let str = solution[step][j]
+          for (let j=0; j < solution[step].length; j++) {
+            let str = solution[step][j].replaceAll('prime', "'")
             console.log(str)
             for (let i=0; i<str.length; i++) {
-              str[i] = reverseMap[str[i]] ? reverseMap[str[i]] : str[i]
+              str = reverseMap[str[i]] ? str.substring(0, i) + reverseMap[str[i]] + str.substring(i + 1) : str
             }
-            console.log(solution)
-            /*
-            str.replaceAll('prime', "'")
-            const splitString = str.split(' ')
-            let translated = splitString.map((move) => {
-              const reverseMap = { 'R': 'L', 'L': 'R', 'U': 'D', 'D': 'U', 'd': 'u', 'u': 'd' }
-              let ret = ''
-              ret = reverseMap[move[0]] ? reverseMap[move[0]] : move[0]
-              if (move.length === 2) ret += move[1]
-              return ret
-            })
-            translated
-            */
-
+            solution[step][j] = str
           }
         } else {
-
+          let str = solution[step].replaceAll('prime', "'")
+          for (let i=0; i<str.length; i++) {
+            str = reverseMap[str[i]] ? str.substring(0, i) + reverseMap[str[i]] + str.substring(i + 1) : str
+          }
+          solution[step] = str
         }
       }
-      console.log(solution)
     },
     reset () {
       for (const key in this.colours) {
