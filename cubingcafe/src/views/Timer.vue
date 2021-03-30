@@ -15,9 +15,9 @@
             <template v-slot:activator="{ on }">
               <v-btn v-on="on" rounded elevation="0" color="transparent"><v-icon class="mr-3" color="#1791e8">mdi-history</v-icon>History</v-btn>
             </template>
-            <v-list>
-              <v-list-item v-for="item in history" :key="item">
-                <v-list-item-title>{{ item }}</v-list-item-title>
+            <v-list class="history">
+              <v-list-item v-for="(item, idx) in history" :key="idx">
+                <v-list-item-title>{{ item.formatted }}</v-list-item-title>
               </v-list-item>
             </v-list>
           </v-menu>
@@ -32,7 +32,7 @@
             </template>
             <v-list>
               <v-list-item v-for="item in size" :key="item.val" @click="getScramble(item.val)">
-                <v-list-item-title class="popupMenu">{{ item.title }}</v-list-item-title>
+                <v-list-item-title>{{ item.title }}</v-list-item-title>
               </v-list-item>
             </v-list>
           </v-menu>
@@ -59,9 +59,9 @@
       </v-row>
       <v-row v-if="mobile" justify="center"><v-btn class="toggleBtn" color="#1791e8" outlined rounded v-on:click="toggleClock()">Toggle</v-btn></v-row>
       <v-row class="statsRow">
-        <v-col class="statHeader">Best<span class="stats">--</span></v-col>
-        <v-col class="statHeader">AVG 5<span class="stats">--</span></v-col>
-        <v-col class="statHeader">AVG 12<span class="stats">--</span></v-col>
+        <v-col class="statHeader">Best<span class="stats">{{ bestTime.formatted}}</span></v-col>
+        <v-col class="statHeader">AVG 5<span class="stats">{{ avg5.formatted }}</span></v-col>
+        <v-col class="statHeader">AVG 12<span class="stats">{{ avg12.formatted }}</span></v-col>
       </v-row>
     </v-col>
   </v-container>
@@ -87,11 +87,17 @@ export default {
     size: [{ title: '2 * 2', val: '222' }, { title: '3 * 3', val: '333' }, { title: '4 * 4', val: '444' },
       { title: '5 * 5', val: '555' }, { title: '6 * 6', val: '666' }, { title: '7 * 7', val: '777' }],
     history: [],
-    scramble: 'U\' F2 U2 F B\' D F L U2 B U2 R2 B2 R\' F L R D R2 F\' R2 B2 L\' F R2'
+    scramble: '',
+    bestTime: { raw: '--', formatted: '--' },
+    avg5: { raw: '--', formatted: '--' },
+    avg12: { raw: '--', formatted: '--' }
   }),
   created () {
     window.addEventListener('keydown', this.toggleClock)
     window.addEventListener('keyup', this.toggleClock)
+  },
+  mounted () {
+    this.getScramble()
   },
   destroyed () {
     window.removeEventListener('keydown', this.toggleClock)
@@ -134,7 +140,10 @@ export default {
           this.actionEvent = false
         }
       } else if (event.keyCode === 13 && event.type === 'keydown') {
-        if (this.mode === 'stopwatch') this.history.push(this.msToTime(this.$refs.timer.timeElapsed))
+        if (this.mode === 'stopwatch') {
+          this.history.push({ raw: this.$refs.timer.timeElapsed, formatted: this.msToTime(this.$refs.timer.timeElapsed) })
+          this.updateStats()
+        }
         this.$refs.timer.reset()
         this.actionEvent = true
         this.getScramble()
@@ -149,6 +158,25 @@ export default {
       const state = scrambler.getRandomScramble()
       this.scramble = state.scrambleString
       scrambler.drawScramble(this.$refs.scrambleImage, state.state, 500, 250)
+    },
+    updateStats () {
+      // Update best
+      const lastIdx = this.history.length - 1
+      if (this.history.length === 1) {
+        this.bestTime = { raw: this.history[0].raw, formatted: this.history[0].formatted }
+      } else if (this.bestTime.raw > this.history[lastIdx].raw) {
+        this.bestTime = { raw: this.history[lastIdx].raw, formatted: this.history[lastIdx].formatted }
+      }
+      // Update avg 5
+      if (this.history.length >= 5) {
+        const raw = Math.floor((this.history.slice(-5).reduce((sum, { raw }) => sum + raw, 0)) / 5)
+        this.avg5 = { raw: raw, formatted: this.msToTime(raw) }
+      }
+      // Update avg 12
+      if (this.history.length >= 12) {
+        const raw = Math.floor((this.history.slice(-12).reduce((sum, { raw }) => sum + raw, 0)) / 12)
+        this.avg12 = { raw: raw, formatted: this.msToTime(raw) }
+      }
     },
     msToTime (s) {
       function pad (n, z) {
@@ -184,6 +212,10 @@ export default {
     text-align: center;
     justify-content: center;
     padding-top: 12vh;
+  }
+  .history {
+    max-height: 50vh;
+    overflow-y: auto;
   }
   .statsRow {
     padding-top: 20vh;

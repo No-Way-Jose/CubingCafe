@@ -6,15 +6,29 @@
           <video playsinline autoplay muted ref="localVideo"></video>
         </v-col>
         <v-col cols="6" v-if="waiting">
-          <h1>Rules & Guidelines</h1>
-          <p v-for="rule in rules" :key="rule">{{ rule }}</p>
+          <v-row justify="center">
+            <h1>Rules & Guidelines</h1>
+          </v-row>
+          <v-row class="px-5">
+            <p v-for="rule in rules" :key="rule">{{ rule }}</p>
+          </v-row>
         </v-col>
-        <v-col v-else ref="oppVideo" cols="6"></v-col>
+        <v-col v-else ref="oppVideo" cols="6" align-self="center">
+          <v-row ref="loading">
+            <v-col class="loading">
+              <h2 class="pb-10">Looking for opponent ...</h2>
+              <v-progress-circular :size="80" :width="8" color="primary" indeterminate></v-progress-circular>
+              <p class="pt-10">{{ queueSize }}</p>
+            </v-col>
+          </v-row>
+        </v-col>
       </v-row>
 
       <v-row ref="scrambleRow" class="scrambleRow">
         <v-col cols="3" class="scrambleCol" align-self="center">
-          <v-btn v-if="!readyBtn.userStarted" large rounded v-bind:color="scramble.myScramble" v-bind:disabled="!scramble.confirmed">{{ readyBtn.userReady }}</v-btn>
+          <v-btn v-if="!readyBtn.userStarted" large rounded v-bind:color="scramble.myScramble" v-bind:disabled="!scramble.confirmed" class="statBtn">
+            {{ readyBtn.userReady }}
+          </v-btn>
           <div ref="userStopwatch" class="timeFont"></div>
         </v-col>
         <v-col cols="6" class="scrambleCol">
@@ -25,14 +39,16 @@
           <v-row justify="center" ref="countdown" class="countdown"></v-row>
         </v-col>
         <v-col cols="3" class="scrambleCol" align-self="center">
-          <v-btn v-if="!readyBtn.oppStarted" large rounded v-bind:color="scramble.oppScramble" @click="confirmScramble">{{ readyBtn.oppReady }}</v-btn>
+          <v-btn v-if="!readyBtn.oppStarted" large rounded v-bind:color="scramble.oppScramble" @click="confirmScramble" class="statBtn">
+            {{ readyBtn.oppReady }}
+          </v-btn>
           <div ref="oppStopwatch" class="timeFont"></div>
         </v-col>
       </v-row>
 
-      <v-row class="matchControls" justify="center">
-        <v-btn ref="connect" @click="connect" v-if="waiting">Find Match</v-btn>
-        <v-btn ref="disconnect" @click="disconnect" v-if="!waiting">Disconnect</v-btn>
+      <v-row class="py-8" justify="center">
+        <v-btn ref="connect" @click="connect" v-if="waiting" color="primary">Find Match</v-btn>
+        <v-btn ref="disconnect" @click="disconnect" v-if="!waiting" color="red">{{ discBtnTxt }}</v-btn>
       </v-row>
     </v-col>
 
@@ -51,8 +67,10 @@ export default {
     waiting: true,
     keysPressed: {},
     showStart: false,
+    queueSize: '',
+    discBtnTxt: 'Disconnect',
     readyBtn: { userReady: 'My Scramble is good!', userStarted: false, oppReady: 'Your Scramble is good!', oppStarted: false},
-    scramble: { moves: '', confirmed: false, oppScramble: 'red', myScramble: 'primary' },
+    scramble: { moves: '', confirmed: false, oppScramble: 'error', myScramble: 'primary' },
     initialConnection: true,
     playerState: {},
     confirmed: false,
@@ -71,6 +89,7 @@ export default {
     this.matchSetup()
   },
   beforeRouteLeave (to, from, next) {
+    this.disconnect()
     api.stopCamera()
     next()
   },
@@ -127,7 +146,6 @@ export default {
             this.$refs.countdown.style.display = 'none'
             this.$refs.userStopwatch.style.display = 'block'
             this.readyBtn.userStarted = true
-            // this.$refs.userStopwatch.className = this.$refs.userStopwatch.className.replace('hidden', '')
             api.sendStarted()
             this.timer.start()
             this.startOnRelease = false
@@ -216,13 +234,12 @@ export default {
       } else {
         api.findMatch()
       }
-      this.$refs.connect.className += 'hidden'
-      //this.$refs.disconnect.classList.remove('hidden')
     },
     disconnect () {
-      api.disconnect()
       this.waiting = true
+      if (this.$refs.loading) this.$refs.loading.style.display = 'block'
       if (this.opponentVideo) this.opponentVideo.remove()
+      this.initialConnection = true
       this.playerState = {}
       this.confirmed = false
       this.startOnRelease = false
@@ -240,14 +257,20 @@ export default {
       this.$refs.scrambleRow.style.display = 'none'
       this.$refs.oppStopwatch.style.display = 'none'
       this.$refs.userStopwatch.style.display = 'none'
+      if (this.discBtnTxt !== 'Disconnect') {
+        this.discBtnTxt = 'Disconnect'
+        this.connect()
+      }
     },
     handleMatchUpdates (obj) {
       switch (obj.action) {
         case 0: // connected to queue
+          this.queueSize = `Joined queue of size: ${obj.data.queueSize}`
           console.log(`Joined queue of size ${obj.data.queueSize}`)
           break
         case 1: // connected to a match
           console.log('Connected to match adding video stream')
+          if (this.$refs.loading) this.$refs.loading.style.display = 'none'
           this.opponentVideo = document.createElement('video')
           this.opponentVideo.id = obj.data.id
           this.opponentVideo.srcObject = obj.data.stream
@@ -258,6 +281,7 @@ export default {
         case 2: // disconnected from an opponent
           console.log('Opponent DISCONNECTED removing video stream')
           if (this.opponentVideo) this.opponentVideo.remove()
+          this.disconnect()
           break
         case 4: // user interaction
           switch (obj.data.action) {
@@ -273,7 +297,6 @@ export default {
             case 'StartedSolving':
               this.$refs.oppStopwatch.style.display = 'block'
               this.readyBtn.oppStarted = true
-              // this.$refs.oppStopwatch.className = this.$refs.oppStopwatch.className.replace('hidden', '')
               this.opponentTimer.start()
               break
             case 'Solved':
@@ -297,9 +320,11 @@ export default {
           break
         case 5: // left queue
           this.waiting = true
+          if (this.$refs.loading) this.$refs.loading.style.display = 'block'
           break
         case 6: // match completed, result received from server
           console.log('match registered with server can do something here later')
+          this.discBtnTxt = 'Go Again!'
           break
       }
     },
@@ -324,9 +349,6 @@ export default {
     object-fit: cover;
     border-radius: 10px;
   }
-  .hidden {
-    visibility: hidden;
-  }
   .scrambleCol {
     text-align: center;
   }
@@ -343,6 +365,12 @@ export default {
   }
   .scrambleRow {
     display: none;
+  }
+  .loading {
+    text-align: center;
+  }
+  .statBtn {
+    min-width: 85px;
   }
 
 </style>
