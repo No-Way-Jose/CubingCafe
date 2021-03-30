@@ -210,7 +210,7 @@ export default {
         this.showSnack(err.message)
         console.log('ERROR', err.message)
       }
-      
+
       // Reformat solution
       const reverseMap = { 'R': 'L', 'L': 'R', 'U': 'D', 'D': 'U', 'd': 'u', 'u': 'd' }
       for (const step in solution) {
@@ -231,6 +231,7 @@ export default {
           solution[step] = str
         }
       }
+
       this.instructions = Object.values(solution)
       console.log(this.instructions)
       this.generatePreview()
@@ -249,6 +250,7 @@ export default {
         this.currentState += 'y2'
       }
       this.generatePreview()
+
     },
     reset () {
       for (const key in this.colours) {
