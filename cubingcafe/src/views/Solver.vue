@@ -38,44 +38,9 @@
         </v-row>
       </v-col>
     </v-row>
-    <v-row><h2>Rubiks Cube Notation</h2></v-row>
-    <v-row>
-      <v-row class="py-4 pl-6">
-        <v-col>
-          <v-row class="py-4"><h3>Cube Faces</h3></v-row>
-          <v-row>
-            <v-col>• F: The front face (Green)</v-col>
-            <v-col>• B: The back face (Blue)</v-col>
-            <v-col>• R: The right face (Red)</v-col>
-            <v-col>• L: The left face (Orange)</v-col>
-            <v-col>• U: The top face (Yellow)</v-col>
-            <v-col>• D: The bottom face (White)</v-col>
-          </v-row>
-        </v-col>
-      </v-row>
 
-      <v-row class="pt-4 pl-6">
-        <v-col class="pr-3">
-          <v-row class="py-4"><h3>Cube Turns</h3></v-row>
-          <p>• X: A 90-degree clockwise turn of the X face</p>
-          <p>• X': A 90-degree counterclockwise turn of the X face</p>
-          <p>• X2: A 180-degree turn (either direction) of the X face</p>
-        </v-col>
-        <v-col class="pr-3">
-          <v-row class="py-4"><h3>Slice Turns</h3></v-row>
-          <p>• M: a move of the Middle layer (Between R and L), in the same direction as an L turn</p>
-          <p>• E: a move of the Equatorial layer (Between U and D), in the same direction as a D turn</p>
-          <p>• S: a move of the Standing layer (between F and B), in the same direction as an F turn</p>
-        </v-col>
-        <v-col class="pr-3">
-          <v-row class="py-4"><h3>Combination Turns</h3></v-row>
-          <p>• r: a move of the Right & Middle layer</p>
-          <p>• b: a move of the Back & Standing layer</p>
-          <p>• Similar logic applies to the other possible combination / lowercase notations</p>
-        </v-col>
-      </v-row>
-    </v-row>
-    <v-row class="cubePreview">
+    <v-row justify="center" class="pt-4" v-bind:class="{ hidden: notSolved }"><v-divider class="pt-12 my-12"/></v-row>
+    <v-row class="cubePreview" v-bind:class="{ hidden: notSolved }">
       <v-col>
         <v-row><h1>Cube Preview</h1></v-row>
         <v-row ref="cubePreview" justify="center"></v-row>
@@ -87,9 +52,10 @@
       </v-col>
     </v-row>
 
-    <v-row class="py-6"><h1>Solution</h1></v-row>
-    <v-row ref="cubeImg"></v-row>
-    <v-row>
+    <v-row class="pt-6" v-bind:class="{ hidden: notSolved }"><h1>Solution</h1></v-row>
+    <v-row class="pb-6" v-bind:class="{ hidden: notSolved }"><h3>* Start with green facing you and white on the bottom</h3></v-row>
+    <v-row ref="cubeImg" v-bind:class="{ hidden: notSolved }"></v-row>
+    <v-row v-bind:class="{ hidden: notSolved }">
       <v-col cols="8">
         <v-expansion-panels>
           <v-expansion-panel v-for="(steps, idx) in instructions" :key="idx">
@@ -99,7 +65,9 @@
                 <v-col cols="10">
                   <p v-for="(step, ix) in steps" :key="ix">{{ step }}</p>
                 </v-col>
-                <v-col cols="2" align-self="center"><v-btn color="primary">View</v-btn></v-col>
+                <v-col cols="2" align-self="center">
+                  <v-btn color="primary" @click="generatePreview(currentState.sol + currentState.states[headers[idx].moves])">View</v-btn>
+                </v-col>
               </v-row>
             </v-expansion-panel-content>
           </v-expansion-panel>
@@ -140,7 +108,6 @@
           </v-card-text>
         </v-card>
       </v-col>
-
     </v-row>
   </v-container>
 
@@ -154,6 +121,7 @@ export default {
   name: 'Solver',
   data: () => ({
     selectedColour: 'redBlock',
+    notSolved: true,
     colours: {
       6: { class: 'greenBlock', idx: 0 },
       7: { class: 'redBlock', idx: 1 },
@@ -171,13 +139,14 @@ export default {
       { label: 'White', colour: 'grey', value: 'whiteBlock' }
     ],
     headers: [
-      { step: 'C: Cross', moves: ''},
-      { step: 'F: F2L (First 2 Layers)', moves: ''},
-      { step: 'O: OLL (Orient Last Layer)', moves: ''},
-      { step: 'P: PLL (Permute Last Layer)', moves: ''}
+      { step: 'C: Cross', moves: 'cross'},
+      { step: 'F: F2L (First 2 Layers)', moves: 'f2l'},
+      { step: 'O: OLL (Orient Last Layer)', moves: 'oll'},
+      { step: 'P: PLL (Permute Last Layer)', moves: 'pll'}
       ],
     instructions: [],
-    currentState: 'x2 R\' U L B U F L2 D R D U\' R',
+    currentState: { alg: '', sol: '', states: { cross: '', f2l: '', oll: '', pll: '' } },
+    moveMask: { 'u\'': '2Uw\'', 'u': '2Uw', 'b': '2Bw', 'b\'': '2Bw\'', 'd': '2Dw', 'd\'': '2Dw\'' },
     snackMessage: { activate: false, message: null, timeout: 3000 }
   }),
   methods: {
@@ -189,39 +158,37 @@ export default {
       this.snackMessage.activate = true
     },
     solve () {
+      this.currentState = { alg: '', sol: '', states: { cross: '', f2l: '', oll: '', pll: '' } }
       const map = { white: 'u', orange: 'l', green: 'f', red: 'r', blue: 'b', yellow: 'd' }
       const data = ['', '', '', '', '', '']
 
-      console.log(Object.keys(this.colours))
       for (const key in this.colours) {
         for (let i = 1; i < 10; i++) {
           const block = String(key) + '-' + String(i)
           data[this.colours[key].idx] += (map[this.$refs[block][0].className.substring(6).replaceAll('Block','').trim()])
         }
       }
-      const x = ["flulfbddr", "rudrruddl", "dbbburrfb", "llffdrubf", "rludlubrf", "lubfbfudl"]
-      console.log(data.join(''))
-
+      //const x = ["flulfbddr", "rudrruddl", "dbbburrfb", "llffdrubf", "rludlubrf", "lubfbfudl"]
       let solution = ''
       try {
-        solution = solver(x.join(''), { partitioned: true })
+        solution = solver(data.join(''), { partitioned: true })
       }
       catch (err) {
         this.showSnack(err.message)
-        console.log('ERROR', err.message)
       }
 
       // Reformat solution
       const reverseMap = { 'R': 'L', 'L': 'R', 'U': 'D', 'D': 'U', 'd': 'u', 'u': 'd' }
       for (const step in solution) {
         if (step === 'cross' || step === 'f2l') {
+          if (step === 'f2l') this.currentState.states[step] += this.currentState.states.cross
           for (let j=0; j < solution[step].length; j++) {
             let str = solution[step][j].replaceAll('prime', "'")
-            console.log(str)
-            for (let i=0; i<str.length; i++) {
-              str = reverseMap[str[i]] ? str.substring(0, i) + reverseMap[str[i]] + str.substring(i + 1) : str
-            }
+
+            str = this.convertAlg(str, reverseMap)
             solution[step][j] = str
+            this.currentState.sol += str + ' '
+            this.currentState.states[step] += this.convertAlg(str, this.moveMask) + ' '
           }
         } else {
           let str = solution[step].replaceAll('prime', "'")
@@ -229,34 +196,58 @@ export default {
             str = reverseMap[str[i]] ? str.substring(0, i) + reverseMap[str[i]] + str.substring(i + 1) : str
           }
           solution[step] = str
+          this.currentState.sol += str + ' '
+
+          if (step === 'oll') {
+            this.currentState.states.oll += this.currentState.states.f2l
+            this.currentState.states.oll += this.convertAlg(str, this.moveMask)
+          } else {
+            this.currentState.states.pll += this.currentState.states.oll
+            this.currentState.states.pll += ' ' + this.convertAlg(str, this.moveMask)
+          }
         }
       }
-
+      this.createAlgString(this.currentState.sol)
       this.instructions = Object.values(solution)
-      console.log(this.instructions)
-      this.generatePreview()
-      //cubePNG(this.$refs.cubePreview, { cubeSize: 3, algorithm: this.currentState, width: 500, height: 500 })
-      //cubePNG(this.$refs.cubePreview, { cubeSize: 3, algorithm: "x2 R' U L B U F L2 D R D U' R y2", width: 500, height: 500 })
-
+      this.notSolved = false
+      this.generatePreview(this.currentState.sol.trim())
     },
-    generatePreview () {
+    convertAlg (theString, mapping) {
+      for (let i=0; i<theString.length; i++) {
+        theString = mapping[theString[i]] ? theString.substring(0, i) + mapping[theString[i]] + theString.substring(i + 1) : theString
+      }
+      return theString
+    },
+    createAlgString (moves) {
+      // Add to currentState for visualizer
+      let split = moves.split(' ')
+      for (let k=0; k<split.length-1; k++) {
+        if (split[k].includes('\'')) {
+          split[k] = split[k].slice(0, split[k].length - 1)
+        } else {
+          split[k] = split[k] += '\''
+        }
+      }
+      this.currentState.sol = this.convertAlg(split.reverse().join(' '), this.moveMask)
+    },
+    generatePreview (algorithm) {
+      this.currentState.alg = algorithm
       this.$refs.cubePreview.innerHTML = ''
-      cubePNG(this.$refs.cubePreview, { cubeSize: 3, algorithm: this.currentState, width: 500, height: 500 })
+      cubePNG(this.$refs.cubePreview, { cubeSize: 3, algorithm: 'y2 ' + algorithm, width: 500, height: 500 })
     },
     rotateCube () {
-      if (this.currentState.slice(this.currentState.length - 2) === 'y2') {
-        this.currentState = this.currentState.slice(0, this.currentState.length - 2)
+      if (this.currentState.alg.slice(this.currentState.alg.length - 2) === 'y2') {
+        this.currentState.alg = this.currentState.alg.slice(0, this.currentState.alg.length - 2)
       } else {
-        this.currentState += 'y2'
+        this.currentState.alg += 'y2'
       }
-      this.generatePreview()
-
+      this.generatePreview(this.currentState.alg)
     },
     reset () {
       for (const key in this.colours) {
         for (let i = 1; i < 10; i++) {
           const block = String(key) + '-' + String(i)
-          if (block === '6-5') {
+          if (i === 5) {
             this.$refs[block][0].className = 'centerBlock ' + this.colours[key].class
           } else {
             this.$refs[block][0].className = 'block ' + this.colours[key].class
@@ -276,6 +267,9 @@ export default {
   .col {
     padding: 3px;
   }
+  .hidden {
+    display:  none;
+  }
   .rubiksInput {
     max-width: 900px;
   }
@@ -288,6 +282,9 @@ export default {
   }
   .snackMessage {
     margin-top: 85px;
+  }
+  .solveDivider {
+    width: 50%;
   }
   .block:hover {
     border: 3px solid cornflowerblue;
@@ -308,7 +305,7 @@ export default {
     background-color: royalblue;
   }
   .greenBlock {
-    background-color: springgreen;
+    background-color: #14D53E;
   }
 
 </style>
