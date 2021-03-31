@@ -3,6 +3,7 @@ import App from './App.vue'
 import router from './router'
 import vuetify from './plugins/vuetify'
 import store from '../store/store.js'
+import scroll from 'vue-scrollto'
 import { directive } from 'v-aspect-ratio'
 import firebase from 'firebase/app'
 import 'firebase/auth'
@@ -13,6 +14,7 @@ import VueGoogleCharts from 'vue-google-charts'
 
 Vue.config.productionTip = false
 
+Vue.use(scroll)
 Vue.use(VueGoogleCharts)
 Vue.directive('aspect-ratio', directive)
 

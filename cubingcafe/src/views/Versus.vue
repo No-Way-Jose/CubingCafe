@@ -5,12 +5,14 @@
         <v-col cols="6">
           <video playsinline autoplay muted ref="localVideo"></video>
         </v-col>
-        <v-col cols="6" v-if="waiting">
+        <v-col cols="6" v-if="waiting" align-self="center" class="px-12">
           <v-row justify="center">
             <h1>Rules & Guidelines</h1>
           </v-row>
           <v-row class="px-5">
-            <p v-for="rule in rules" :key="rule">{{ rule }}</p>
+            <v-col>
+              <p v-for="rule in rules" :key="rule">{{ rule }}</p>
+            </v-col>
           </v-row>
         </v-col>
         <v-col v-else ref="oppVideo" cols="6" align-self="center">
@@ -83,7 +85,14 @@ export default {
     solveComplete: false,
     matchDetails: {},
     opponentVideo: null,
-    rules: ['• No Profanity', '• Some other stuff', '• Even more stuff', '• Lol sure more rules', '• idk..', '• last one...']
+    rules: [
+      '• No Profanity',
+      '• Click Find Match to find an opponent',
+      '• Once an opponent is found, scramble your cube using the provided algorithm',
+      '• Verify that your opponent has scrambled their cube correctly by clicking (Your Scramble is good!)',
+      '• After both users have their scrambles confirmed, hold the spacebar to indicate you are ready',
+      '• After both users are ready and the countdown reaches 0... GO!'
+    ]
   }),
   ready () {
     this.matchSetup()
@@ -236,10 +245,10 @@ export default {
       }
     },
     disconnect () {
+      api.disconnect()
       this.waiting = true
-      if (this.$refs.loading) this.$refs.loading.style.display = 'block'
+      if (this.$refs.loading) this.$refs.loading.style.display = 'flex'
       if (this.opponentVideo) this.opponentVideo.remove()
-      this.initialConnection = true
       this.playerState = {}
       this.confirmed = false
       this.startOnRelease = false
@@ -320,7 +329,7 @@ export default {
           break
         case 5: // left queue
           this.waiting = true
-          if (this.$refs.loading) this.$refs.loading.style.display = 'block'
+          if (this.$refs.loading) this.$refs.loading.style.display = 'flex'
           break
         case 6: // match completed, result received from server
           console.log('match registered with server can do something here later')

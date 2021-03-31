@@ -33,14 +33,14 @@
           <h1>Options</h1>
         </v-row>
         <v-row class="pt-5 pl-2">
-          <v-btn @click="solve()" color="primary" class="mr-5">Solve!</v-btn>
+          <v-btn @click="solve()" color="primary" class="mr-5" v-scroll-to="scrollTo('solution')">Solve!</v-btn>
           <v-btn @click="reset()" color="warning">Reset</v-btn>
         </v-row>
       </v-col>
     </v-row>
 
     <v-row justify="center" class="pt-4" v-bind:class="{ hidden: notSolved }"><v-divider class="pt-12 my-12"/></v-row>
-    <v-row class="cubePreview" v-bind:class="{ hidden: notSolved }">
+    <v-row id="solution" class="cubePreview" v-bind:class="{ hidden: notSolved }">
       <v-col>
         <v-row><h1>Cube Preview</h1></v-row>
         <v-row ref="cubePreview" justify="center"></v-row>
@@ -59,11 +59,12 @@
       <v-col cols="8">
         <v-expansion-panels>
           <v-expansion-panel v-for="(steps, idx) in instructions" :key="idx">
-            <v-expansion-panel-header><h3>{{ headers[idx].step }}</h3></v-expansion-panel-header>
-            <v-expansion-panel-content>
+            <v-expansion-panel-header><h3 class="stepHeader">{{ headers[idx].step }}</h3></v-expansion-panel-header>
+            <v-expansion-panel-content class="py-2">
               <v-row>
-                <v-col cols="10">
-                  <p v-for="(step, ix) in steps" :key="ix">{{ step }}</p>
+                <v-col cols="10" class="pl-3">
+                  <h3 v-if="steps.join('').length === 0">Lucky you! You got a {{ headers[idx].moves }} skip</h3>
+                  <h3 v-else v-for="(step, ix) in steps" :key="ix">{{ step }}</h3>
                 </v-col>
                 <v-col cols="2" align-self="center">
                   <v-btn color="primary" @click="generatePreview(currentState.sol + currentState.states[headers[idx].moves])">View</v-btn>
@@ -172,45 +173,46 @@ export default {
       let solution = ''
       try {
         solution = solver(data.join(''), { partitioned: true })
-      }
-      catch (err) {
-        this.showSnack(err.message)
-      }
+        // Reformat solution
+        const reverseMap = { 'R': 'L', 'L': 'R', 'U': 'D', 'D': 'U', 'd': 'u', 'u': 'd' }
+        for (const step in solution) {
+          if (step === 'cross' || step === 'f2l') {
+            if (step === 'f2l') this.currentState.states[step] += this.currentState.states.cross
+            for (let j=0; j < solution[step].length; j++) {
+              let str = solution[step][j].replaceAll('prime', "'")
 
-      // Reformat solution
-      const reverseMap = { 'R': 'L', 'L': 'R', 'U': 'D', 'D': 'U', 'd': 'u', 'u': 'd' }
-      for (const step in solution) {
-        if (step === 'cross' || step === 'f2l') {
-          if (step === 'f2l') this.currentState.states[step] += this.currentState.states.cross
-          for (let j=0; j < solution[step].length; j++) {
-            let str = solution[step][j].replaceAll('prime', "'")
-
-            str = this.convertAlg(str, reverseMap)
-            solution[step][j] = str
-            this.currentState.sol += str + ' '
-            this.currentState.states[step] += this.convertAlg(str, this.moveMask) + ' '
-          }
-        } else {
-          let str = solution[step].replaceAll('prime', "'")
-          for (let i=0; i<str.length; i++) {
-            str = reverseMap[str[i]] ? str.substring(0, i) + reverseMap[str[i]] + str.substring(i + 1) : str
-          }
-          solution[step] = str
-          this.currentState.sol += str + ' '
-
-          if (step === 'oll') {
-            this.currentState.states.oll += this.currentState.states.f2l
-            this.currentState.states.oll += this.convertAlg(str, this.moveMask)
+              str = this.convertAlg(str, reverseMap)
+              solution[step][j] = str
+              this.currentState.sol += str + ' '
+              this.currentState.states[step] += this.convertAlg(str, this.moveMask) + ' '
+            }
           } else {
-            this.currentState.states.pll += this.currentState.states.oll
-            this.currentState.states.pll += ' ' + this.convertAlg(str, this.moveMask)
+            let str = solution[step].replaceAll('prime', "'")
+            for (let i=0; i<str.length; i++) {
+              str = reverseMap[str[i]] ? str.substring(0, i) + reverseMap[str[i]] + str.substring(i + 1) : str
+            }
+            solution[step] = [str]
+            this.currentState.sol += str + ' '
+
+            if (step === 'oll') {
+              this.currentState.states.oll += this.currentState.states.f2l
+              this.currentState.states.oll += this.convertAlg(str, this.moveMask)
+            } else {
+              this.currentState.states.pll += this.currentState.states.oll
+              this.currentState.states.pll += ' ' + this.convertAlg(str, this.moveMask)
+            }
           }
         }
+        this.createAlgString(this.currentState.sol)
+        this.instructions = Object.values(solution)
+        this.notSolved = false
+        this.generatePreview(this.currentState.sol.trim())
+        console.log(solution, this.currentState.sol)
+      } catch (err) {
+        this.showSnack('ERROR: ' + err.message)
       }
-      this.createAlgString(this.currentState.sol)
-      this.instructions = Object.values(solution)
-      this.notSolved = false
-      this.generatePreview(this.currentState.sol.trim())
+
+
     },
     convertAlg (theString, mapping) {
       for (let i=0; i<theString.length; i++) {
@@ -242,6 +244,9 @@ export default {
         this.currentState.alg += 'y2'
       }
       this.generatePreview(this.currentState.alg)
+    },
+    scrollTo (section) {
+      return { element: '#' + section, offset: -120 }
     },
     reset () {
       for (const key in this.colours) {
@@ -282,6 +287,12 @@ export default {
   }
   .snackMessage {
     margin-top: 85px;
+  }
+  .stepHeader {
+    color: #0275d8;
+  }
+  .steps {
+    font-size: 1.5vw;
   }
   .solveDivider {
     width: 50%;
