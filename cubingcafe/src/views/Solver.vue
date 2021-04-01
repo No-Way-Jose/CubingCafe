@@ -1,11 +1,11 @@
 <template>
   <v-container class="solverContainer">
     <!-- Snackbar template -->
-    <v-snackbar class="snackMessage" color="red" v-model="snackMessage.activate" :timeout="snackMessage.timeout" top right transition="slide-y-transition">
+    <v-snackbar class="snackMessage" v-bind:color="snackColour" v-model="snackMessage.activate" :timeout="snackMessage.timeout" top right transition="slide-y-transition">
       {{ snackMessage.message }}
     </v-snackbar>
 
-    <v-row justify="center" class="pb-5">
+    <v-row justify="center" class="pb-12">
       <v-row class="rubiksInput">
         <v-col v-for="face in 12" :key="face" class="d-flex child-flex" cols="3">
           <v-row v-if="String(face) in colours" class="py-3">
@@ -17,27 +17,34 @@
         </v-col>
       </v-row>
     </v-row>
-    <v-text-field v-model="scrambleInput" label="Enter scramble..." outlined rounded></v-text-field>
-    <v-row class="mt-12">
-      <v-col cols="8">
-        <v-row>
-          <h1>Colour Selector</h1>
+
+    <v-row class="my-12">
+      <v-col cols="5" class="pr-12">
+        <v-row><h1>Scramble Input</h1></v-row>
+        <v-row class="pt-3 pr-6">
+          <p>Note: The given scramble may only contain the standard cube face notations [R, L, F, B , U, D].
+            Prime/counterclockwise moves as well as double rotations should be indicated using X' or X2 accordingly,
+            where where X is a valid cube face.
+          </p>
         </v-row>
+        <v-row class="pt-2 pr-2">
+          <v-text-field v-model="scrambleInput" label="Enter scramble..."></v-text-field>
+        </v-row>
+      </v-col>
+      <v-col cols="7" class="pl-6">
+        <v-row><h1>Colour Selector</h1></v-row>
         <v-row>
           <v-col v-for="option in options" :key="option.label" cols="12" sm="4" md="2">
             <v-checkbox v-model="selectedColour" v-bind:label="option.label" v-bind:color="option.colour" v-bind:value="option.value"></v-checkbox>
           </v-col>
         </v-row>
-      </v-col>
-      <v-col cols="4" class="pl-6">
-        <v-row>
-          <h1>Options</h1>
+        <v-row><h1>Options</h1></v-row>
+        <v-row class="pt-3 pl-2">
+          <v-btn @click="performScramble()" color="warning" class="mr-5">View Scramble</v-btn>
+          <v-btn @click="solve()" color="info" class="mr-5" v-scroll-to="scrollTo('solution')">Solve!</v-btn>
+          <v-btn @click="reset()" color="error">Reset</v-btn>
         </v-row>
-        <v-row class="pt-5 pl-2">
-          <v-btn @click="performScramble()" color="primary" class="mr-5">Do Scramble</v-btn>
-          <v-btn @click="solve()" color="primary" class="mr-5" v-scroll-to="scrollTo('solution')">Solve!</v-btn>
-          <v-btn @click="reset()" color="warning">Reset</v-btn>
-        </v-row>
+
       </v-col>
     </v-row>
 
@@ -65,8 +72,8 @@
             <v-expansion-panel-content class="py-2">
               <v-row>
                 <v-col cols="10" class="pl-3">
-                  <h3 v-if="steps.join('').length === 0">Lucky you! You got a {{ headers[idx].moves }} skip</h3>
-                  <h3 v-else v-for="(step, ix) in steps" :key="ix">{{ step }}</h3>
+                  <p v-if="steps.join('').length === 0">Lucky you! You got a {{ headers[idx].moves }} skip</p>
+                  <p v-else v-for="(step, ix) in steps" :key="ix">{{ step }}</p>
                 </v-col>
                 <v-col cols="2" align-self="center">
                   <v-btn color="primary" @click="generatePreview(currentState.sol + currentState.states[headers[idx].moves])">View</v-btn>
@@ -125,13 +132,14 @@ export default {
   data: () => ({
     selectedColour: 'redBlock',
     notSolved: true,
+    snackColour: 'error',
     colours: {
-      6: { class: 'greenBlock', idx: 0 },
-      7: { class: 'redBlock', idx: 1 },
-      2: { class: 'whiteBlock', idx: 2 },
-      10: { class: 'yellowBlock', idx: 3 },
-      5: { class: 'orangeBlock', idx: 4 },
-      8: { class: 'blueBlock', idx: 5 },
+      6: { class: 'greenBlock', limit: 9, idx: 0 },
+      7: { class: 'redBlock', limit: 9, idx: 1 },
+      2: { class: 'whiteBlock', limit: 9, idx: 2 },
+      10: { class: 'yellowBlock', limit: 9, idx: 3 },
+      5: { class: 'orangeBlock', limit: 9, idx: 4 },
+      8: { class: 'blueBlock', limit: 9, idx: 5 },
     },
     options: [
       { label: 'Red', colour: 'red', value: 'redBlock' },
@@ -150,12 +158,13 @@ export default {
     instructions: [],
     currentState: { alg: '', sol: '', states: { cross: '', f2l: '', oll: '', pll: '' } },
     moveMask: { 'u\'': '2Uw\'', 'u': '2Uw', 'b': '2Bw', 'b\'': '2Bw\'', 'd': '2Dw', 'd\'': '2Dw\'' },
-    snackMessage: { activate: false, message: null, timeout: 3000 },
+    snackMessage: { activate: false, message: null, timeout: 5000 },
     scrambleInput: null,
+    validMoves: 'RLBDUF'
   }),
   methods: {
     performMove (move, counterClockwise) {
-      const moveToFace = {"R": 7, "L": 5, "U": 2, "D": 10, "F": 6, "B": 8}
+      const moveToFace = { 'R': 7, 'L': 5, 'U': 2, 'D': 10, 'F': 6, 'B': 8 }
       let face = moveToFace[move]
       const faceRotation = [[1, 3], [2, 6], [3, 9], [6, 8], [9, 7], [8, 4], [7, 1], [4, 2]]
       let faceColours = []
@@ -171,12 +180,12 @@ export default {
       });
 
       const rotateMapping = {
-        2: { "g": [1,2,3], "o": [1,2,3], "b": [1,2,3], "r": [1,2,3] },
-        5: { "b": [3,6,9], "w": [7,4,1], "g": [7,4,1], "y": [7,4,1] },
-        6: { "o": [3,6,9], "w": [9,8,7], "r": [7,4,1], "y": [1,2,3] },
-        7: { "g": [3,6,9], "w": [3,6,9], "b": [7,4,1], "y": [3,6,9] },
-        8: { "r": [3,6,9], "w": [1,2,3], "o": [7,4,1], "y": [9,8,7] },
-        10: { "o": [9,8,7], "g": [9,8,7], "r": [9,8,7], "b": [9,8,7] },
+        2: { 'g': [1,2,3], 'o': [1,2,3], 'b': [1,2,3], 'r': [1,2,3] },
+        5: { 'b': [3,6,9], 'w': [7,4,1], 'g': [7,4,1], 'y': [7,4,1] },
+        6: { 'o': [3,6,9], 'w': [9,8,7], 'r': [7,4,1], 'y': [1,2,3] },
+        7: { 'g': [3,6,9], 'w': [3,6,9], 'b': [7,4,1], 'y': [3,6,9] },
+        8: { 'r': [3,6,9], 'w': [1,2,3], 'o': [7,4,1], 'y': [9,8,7] },
+        10: { 'o': [9,8,7], 'g': [9,8,7], 'r': [9,8,7], 'b': [9,8,7] },
       }
 
       let firstFace = null;  // use this to know the key for the starting face
@@ -211,23 +220,40 @@ export default {
 
     },
     performScramble () {
-      this.scrambleInput.split(' ').forEach((move) => {
-        move = move.trim()
-        let moveFace = move.length === 1 ? move : move[0];
-        let double = false
-        let counterClockwise = false
-        if (move.length === 2) {
-          counterClockwise = move[1] === '\'' ? true : false
-          double = move[1] === '2' ? true : false
-        }
-        if (double) this.performMove(moveFace, counterClockwise);
-        this.performMove(moveFace, counterClockwise);
-      });
+      this.reset()
+      if (this.scrambleInput) {
+        this.scrambleInput.split(' ').forEach((move) => {
+          move = move.trim()
+          let moveFace = move.length === 1 ? move : move[0];
+          if (this.validMoves.includes(moveFace)) {
+            let double = false
+            let counterClockwise = false
+            if (move.length === 2) {
+              counterClockwise = move[1] === '\''
+              double = move[1] === '2'
+            }
+            if (double) this.performMove(moveFace, counterClockwise);
+            this.performMove(moveFace, counterClockwise);
+          } else {
+            this.showSnack('ERROR: The scramble string contained invalid moves!', 'error')
+          }
+        });
+      } else {
+        this.showSnack('INFO: No scramble string was passed in!', 'info')
+      }
+
     },
     changeColour (block) {
+      const oldKey = Object.keys(this.colours).find(key => this.colours[key].class === this.$refs[block][0].className.substring(6))
+      const newKey = Object.keys(this.colours).find(key => this.colours[key].class === this.selectedColour)
+      this.colours[oldKey].limit -= 1
+      this.colours[newKey].limit += 1
+      if (this.colours[newKey].limit > 9) this.showSnack('WARNING: You\'ve added an invalid number of ' + this.selectedColour.replace('Block', '') + ' blocks!', 'warning')
       this.$refs[block][0].className = 'block ' + this.selectedColour
+
     },
-    showSnack (message) {
+    showSnack (message, colour) {
+      this.snackColour = colour
       this.snackMessage.message = message
       this.snackMessage.activate = true
     },
@@ -282,10 +308,8 @@ export default {
         this.generatePreview(this.currentState.sol.trim())
         console.log(solution, this.currentState.sol)
       } catch (err) {
-        this.showSnack('ERROR: ' + err.message)
+        this.showSnack('ERROR: ' + err.message, 'error')
       }
-
-
     },
     convertAlg (theString, mapping) {
       for (let i=0; i<theString.length; i++) {
@@ -332,6 +356,9 @@ export default {
           }
         }
       }
+      Object.keys(this.colours).forEach((colour) => {
+        this.colours[colour].limit = 9
+      })
     }
   }
 }

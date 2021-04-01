@@ -25,7 +25,7 @@
       <v-footer class="font-weight-medium pa-0" style="justify-content: center" elevation="9" color="#1791e8">
         <v-row class="footerBar ma-0">
           <v-row class="ma-0">
-            <v-col class="footerText" cols="10">
+            <v-col class="footerText">
               <strong>Copyright © {{ new Date().getFullYear() }}  CubingCafe. All rights reserved.</strong>
             </v-col>
           </v-row>
@@ -85,6 +85,10 @@ export default {
     font-weight: bold;
     font-size: 18px;
     text-decoration: none;
+  }
+  .footerText {
+    text-align: center;
+    color: white;
   }
   .router-link-active{
     border-bottom: 2px solid #1791e8;
