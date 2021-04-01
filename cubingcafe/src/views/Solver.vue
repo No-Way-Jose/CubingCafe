@@ -17,6 +17,7 @@
         </v-col>
       </v-row>
     </v-row>
+    <v-text-field v-model="scrambleInput" label="Enter scramble..." outlined rounded></v-text-field>
     <v-row class="mt-12">
       <v-col cols="8">
         <v-row>
@@ -33,6 +34,7 @@
           <h1>Options</h1>
         </v-row>
         <v-row class="pt-5 pl-2">
+          <v-btn @click="performScramble()" color="primary" class="mr-5">Do Scramble</v-btn>
           <v-btn @click="solve()" color="primary" class="mr-5" v-scroll-to="scrollTo('solution')">Solve!</v-btn>
           <v-btn @click="reset()" color="warning">Reset</v-btn>
         </v-row>
@@ -148,9 +150,80 @@ export default {
     instructions: [],
     currentState: { alg: '', sol: '', states: { cross: '', f2l: '', oll: '', pll: '' } },
     moveMask: { 'u\'': '2Uw\'', 'u': '2Uw', 'b': '2Bw', 'b\'': '2Bw\'', 'd': '2Dw', 'd\'': '2Dw\'' },
-    snackMessage: { activate: false, message: null, timeout: 3000 }
+    snackMessage: { activate: false, message: null, timeout: 3000 },
+    scrambleInput: null,
   }),
   methods: {
+    performMove (move, counterClockwise) {
+      const moveToFace = {"R": 7, "L": 5, "U": 2, "D": 10, "F": 6, "B": 8}
+      let face = moveToFace[move]
+      const faceRotation = [[1, 3], [2, 6], [3, 9], [6, 8], [9, 7], [8, 4], [7, 1], [4, 2]]
+      let faceColours = []
+      for (let i = 1; i < 10; i++) {
+        const block = String(face) + '-' + String(i)
+        faceColours.push(this.$refs[block][0].className)
+      }
+      faceRotation.forEach((item) => {
+        let target = counterClockwise ? 0 : 1
+        let source = counterClockwise ? 1 : 0
+        const block = String(face) + '-' + String(item[target])
+        this.$refs[block][0].className = faceColours[item[source]-1]
+      });
+
+      const rotateMapping = {
+        2: { "g": [1,2,3], "o": [1,2,3], "b": [1,2,3], "r": [1,2,3] },
+        5: { "b": [3,6,9], "w": [7,4,1], "g": [7,4,1], "y": [7,4,1] },
+        6: { "o": [3,6,9], "w": [9,8,7], "r": [7,4,1], "y": [1,2,3] },
+        7: { "g": [3,6,9], "w": [3,6,9], "b": [7,4,1], "y": [3,6,9] },
+        8: { "r": [3,6,9], "w": [1,2,3], "o": [7,4,1], "y": [9,8,7] },
+        10: { "o": [9,8,7], "g": [9,8,7], "r": [9,8,7], "b": [9,8,7] },
+      }
+
+      let firstFace = null;  // use this to know the key for the starting face
+      let currFaceColours = [null, null, null];
+      let prevFaceColours = [null, null, null];
+
+      const positionsToMove = rotateMapping[face];
+      let faceSequence = Object.keys(positionsToMove);
+      if (counterClockwise) {
+          faceSequence.reverse();
+      }
+      faceSequence.forEach((currFace) => {
+        face = Object.keys(this.colours).find(key => this.colours[key].class.substring(0,1) === currFace)
+        prevFaceColours = [...currFaceColours];
+        for (let i = 0; i < 3; i++) {
+          const block = String(face) + '-' + String(positionsToMove[currFace][i])
+          currFaceColours[i] = this.$refs[block][0].className;
+        }
+        if (!firstFace) firstFace = currFace;
+        else {
+            for (let i = 0; i < 3; i++) {
+              const block = String(face) + '-' + String(positionsToMove[currFace][i])
+              this.$refs[block][0].className = prevFaceColours[i]
+            }
+        }
+      });
+      face = Object.keys(this.colours).find(key => this.colours[key].class.substring(0,1) === firstFace)
+      for (let i = 0; i < 3; i++) {
+        const block = String(face) + '-' + String(positionsToMove[firstFace][i])
+        this.$refs[block][0].className = currFaceColours[i]
+      }
+
+    },
+    performScramble () {
+      this.scrambleInput.split(' ').forEach((move) => {
+        move = move.trim()
+        let moveFace = move.length === 1 ? move : move[0];
+        let double = false
+        let counterClockwise = false
+        if (move.length === 2) {
+          counterClockwise = move[1] === '\'' ? true : false
+          double = move[1] === '2' ? true : false
+        }
+        if (double) this.performMove(moveFace, counterClockwise);
+        this.performMove(moveFace, counterClockwise);
+      });
+    },
     changeColour (block) {
       this.$refs[block][0].className = 'block ' + this.selectedColour
     },
