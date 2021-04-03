@@ -16,8 +16,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: [//"mongoose.js", "socket.js", "server.js",
-        "server/*/*.js"],
+      files: ["mongoose.js", "socket.js", "server.js", "server/*/*.js"],
       rules: {
         semi: [1, "always"]
       }
