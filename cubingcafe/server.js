@@ -6,6 +6,9 @@ const socketio = require('socket.io')
 const bodyParser = require('body-parser')
 
 const { ExpressPeerServer } = require('peer')
+// const mongoose = require('./mongoose');
+const { graphqlHTTP } = require('express-graphql')
+
 const peerOptions = {
   debug: true,
   path: '/peerjs'
@@ -17,8 +20,6 @@ const mongoUrl = process.env.MONGODB_URI || 'mongodb://localhost/'
 const https = require('https')
 const http = require('http')
 const fs = require('fs')
-
-
 
 const cookie = require('cookie')
 const session = require('express-session')
@@ -63,6 +64,18 @@ const generateHash = (password, salt) => {
   hash.update(password)
   return hash.digest('base64')
 }
+
+const graphqlSchema = require('./server/graphql/')
+app.use(
+  '/graphql',
+  graphqlHTTP((request, res) => {
+    return {
+      context: { startTime: Date.now(), session: request.session, res },
+      graphiql: true,
+      schema: graphqlSchema
+    }
+  })
+)
 
 MongoClient.connect(mongoUrl, (err, client) => {
   if (err) console.error(err)
@@ -160,7 +173,6 @@ MongoClient.connect(mongoUrl, (err, client) => {
   app.get(/.*/, function (req, res) {
     res.sendFile(path.join(__dirname, '/dist/index.html'))
   })
-
 })
 
 let server
