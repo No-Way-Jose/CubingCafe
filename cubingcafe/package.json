@@ -11,6 +11,7 @@
   "dependencies": {
     "@josephuspaye/timer": "^0.1.1",
     "animejs": "^3.2.1",
+    "apollo-boost": "^0.4.9",
     "body-parser": "^1.19.0",
     "cookie": "^0.4.0",
     "core-js": "^3.6.5",
@@ -36,6 +37,7 @@
     "v-aspect-ratio": "^2.0.1",
     "vee-validate": "^3.4.5",
     "vue": "^2.6.11",
+    "vue-apollo": "^3.0.7",
     "vue-google-charts": "^0.3.3",
     "vue-router": "^3.2.0",
     "vue-scrollto": "^2.20.0",

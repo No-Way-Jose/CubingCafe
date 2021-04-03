@@ -11,12 +11,24 @@ import { required, email, min } from 'vee-validate/dist/rules'
 import { extend, ValidationObserver, ValidationProvider, setInteractionMode } from 'vee-validate'
 import vSelect from 'vue-select'
 import VueGoogleCharts from 'vue-google-charts'
+import ApolloClient from 'apollo-boost'
+import VueApollo from 'vue-apollo'
 
 Vue.config.productionTip = false
 
+const apolloClient = new ApolloClient({
+  // You should use an absolute URL here
+  uri: 'https://localhost:8080/graphql'
+})
+
 Vue.use(scroll)
+Vue.use(VueApollo)
 Vue.use(VueGoogleCharts)
 Vue.directive('aspect-ratio', directive)
+
+const apolloProvider = new VueApollo({
+  defaultClient: apolloClient,
+})
 
 setInteractionMode('eager')
 extend('required', { ...required, message: '{_field_} cannot be empty' })
@@ -51,5 +63,6 @@ new Vue({
   router,
   vuetify,
   store,
+  apolloProvider,
   render: h => h(App)
 }).$mount('#app')

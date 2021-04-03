@@ -129,12 +129,14 @@
 <script>
 import { auth, googleAuth } from '../main'
 import { api } from '../js/api.js'
+import gql from 'graphql-tag'
 
 export default {
   name: 'Login',
   data () {
     return {
       screen: 'SignUp',
+      loginResult: '',
       userCredentials: { email: '', password: '' },
       snackMessage: { activate: false, message: null, timeout: 5000 }
     }
@@ -149,13 +151,28 @@ export default {
       this.$refs.observer.validate().then((value) => {
         if (value) {
           if (this.screen === 'LgEmail') {
-            this.login(false)
+            this.loginn()
           } else {
             this.signUp()
           }
         } else {
           alert('Invalid Input. Try Again...')
         }
+      })
+    },
+    async loginn() {
+      this.$apollo.mutate({
+        mutation: gql`mutation signin ($username: String!, $password: String!) { signIn(username: $username, password: $password) { user } }`,
+        variables: { username: this.userCredentials.email, password: this.userCredentials.password }
+      })
+      .then(data => {
+        this.loginResult = data
+        console.log(data)
+        //this.$router.push('/')
+        //this.$store.commit('resetAuthError')
+      })
+      .catch(err => {
+        console.log(err)
       })
     },
     login (firstLogin) {

@@ -222,7 +222,7 @@ export default {
     performScramble () {
       this.reset()
       if (this.scrambleInput) {
-        this.scrambleInput.split(' ').forEach((move) => {
+        this.scrambleInput.trim().split(' ').forEach((move) => {
           move = move.trim()
           let moveFace = move.length === 1 ? move : move[0];
           if (this.validMoves.includes(moveFace)) {
