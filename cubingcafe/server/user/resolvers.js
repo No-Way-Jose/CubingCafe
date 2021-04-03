@@ -12,9 +12,10 @@ const signIn = {
   resolve: async ({ args: { username, password }, context: { session, res } }) => {
     return new Promise((resolve, reject) => {
       UserModel.userExists(username).then(function (user) {
+        if (!user) reject(new Error('Invalid credentials.'));
         return { valid: user.validatePassword(password), user };
       }).then(function ({ valid, user }) {
-        if (!valid) { return reject(new Error('Invalid credentials.')); }
+        if (!valid) { reject(new Error('Invalid credentials.')); }
         session.username = user._id;
         res.setHeader('Set-Cookie', cookie.serialize('username', user._id, {
           path: '/',
@@ -43,7 +44,7 @@ const signUp = {
         if (user) { reject(new Error('Username already taken.')); }
         const salt = generateSalt();
         const hash = generateHash(password, salt);
-        return UserModel({ _id: username, salt, hash, elo: 500, wins: 0, losses: 0 }).save();
+        return UserModel({ _id: username, salt, hash, elo: 400, wins: 0, losses: 0 }).save();
       }).then(function (result) {
         session.username = result._id;
         res.setHeader('Set-Cookie', cookie.serialize('username', result._id, {
