@@ -14,7 +14,7 @@ export default new Vuex.Store({
       message: ''
     },
     data: {
-      loaded: false
+      timer: { sessionID: '', history: [], best: 0, avg5: 0, avg12: 0 }
     }
   },
 
@@ -22,26 +22,18 @@ export default new Vuex.Store({
     setUserState: (state, user) => {
       if (user) {
         state.user.loggedIn = true
-        state.user.displayName = user.email.substring(0, user.email.indexOf('@'))
+        state.user.displayName = user
       } else {
         state.user.loggedIn = false
         state.user.displayName = 'Login'
       }
     },
+    saveTimerData: (state, data) => {
+      state.data.timer = data
+    },
     resetAuthError: (state) => {
       state.authError.error = false
       state.authError.message = ''
-    }
-  },
-
-  actions: {
-    // On auth state change we update the users status in the store
-    fetchUser ({ commit }, user) {
-      if (user) {
-        commit('setUserState', user)
-      } else {
-        commit('setUserState', false)
-      }
     }
   }
 })

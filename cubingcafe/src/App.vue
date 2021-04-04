@@ -37,7 +37,6 @@
 </template>
 
 <script>
-import { auth } from './main'
 export default {
   name: 'App',
   data: () => ({
@@ -52,16 +51,31 @@ export default {
       { option: 'Logout', page: 'logout' }
     ]
   }),
+  mounted () {
+    const username = document.cookie.replace(/(?:(?:^|.*;\s*)username\s*=\s*([^;]*).*$)|^.*$/, '$1')
+    console.log(username)
+    if (username) this.$store.commit('setUserState', username)
+  },
   methods: {
-    logout () {
-      auth.signOut().then(() => {
-        this.$store.commit('setUserState', false)
-        if (this.$route.name !== 'home') {
-          this.$router.push('/')
-        } else {
-          location.reload()
-        }
-      })
+    async logout() {
+      const q = { query: 'mutation signout { signOut { completed } }', operationName: 'signout' }
+      fetch('/graphql', {
+        method: 'post',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(q)
+      }).then((response) => response.json())
+        .then((graphQlRes) => {
+          console.log(graphQlRes)
+          if (graphQlRes.data.signOut.completed) {
+            this.$store.commit('setUserState', false)
+            if (this.$route.name !== 'home') {
+              this.$router.push('/')
+            } else {
+              location.reload()
+            }
+          }
+        })
+        .catch((err) => console.log(err))
     },
     executeOptions (option) {
       // Determine if navigating to new page or logging out

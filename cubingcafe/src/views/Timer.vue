@@ -16,8 +16,9 @@
               <v-btn v-on="on" rounded elevation="0" color="transparent"><v-icon class="mr-3" color="#1791e8">mdi-history</v-icon>History</v-btn>
             </template>
             <v-list class="history">
-              <v-list-item v-for="(item, idx) in history" :key="idx">
-                <v-list-item-title>{{ item.formatted }}</v-list-item-title>
+              <v-list-item @click="newSession"><v-list-item-title class="newSession">New Session</v-list-item-title></v-list-item>
+              <v-list-item v-for="(time, idx) in timerData.history" :key="idx">
+                <v-list-item-title>{{ formatTime(time) }}</v-list-item-title>
               </v-list-item>
             </v-list>
           </v-menu>
@@ -32,7 +33,7 @@
             </template>
             <v-list>
               <v-list-item v-for="item in size" :key="item.val" @click="getScramble(item.val)">
-                <v-list-item-title>{{ item.title }}</v-list-item-title>
+                <v-list-item-title class="centreTxt">{{ item.title }}</v-list-item-title>
               </v-list-item>
             </v-list>
           </v-menu>
@@ -59,11 +60,17 @@
       </v-row>
       <v-row v-if="mobile" justify="center"><v-btn class="toggleBtn" color="#1791e8" outlined rounded v-on:click="toggleClock()">Toggle</v-btn></v-row>
       <v-row class="statsRow">
-        <v-col class="statHeader">Best<span class="stats">{{ bestTime.formatted}}</span></v-col>
-        <v-col class="statHeader">AVG 5<span class="stats">{{ avg5.formatted }}</span></v-col>
-        <v-col class="statHeader">AVG 12<span class="stats">{{ avg12.formatted }}</span></v-col>
+        <v-col class="statHeader">Best<span class="stats">{{ formatTime(timerData.bestTime) }}</span></v-col>
+        <v-col class="statHeader">AVG 5<span class="stats">{{ formatTime(timerData.avg5) }}</span></v-col>
+        <v-col class="statHeader">AVG 12<span class="stats">{{ formatTime(timerData.avg12) }}</span></v-col>
       </v-row>
     </v-col>
+
+    <!-- Snackbar template -->
+    <v-snackbar color="error" class="snackMessage" v-model="snackMessage.activate" :timeout="snackMessage.timeout"
+                top right transition="slide-y-transition">{{ snackMessage.message }}
+    </v-snackbar>
+
   </v-container>
 
 </template>
@@ -84,13 +91,11 @@ export default {
     duration: 3600,
     mobile: isMobile,
     selectedSize: '333',
-    size: [{ title: '2 * 2', val: '222' }, { title: '3 * 3', val: '333' }, { title: '4 * 4', val: '444' },
-      { title: '5 * 5', val: '555' }, { title: '6 * 6', val: '666' }, { title: '7 * 7', val: '777' }],
-    history: [],
+    size: [{ title: '2 x 2', val: '222' }, { title: '3 x 3', val: '333' }, { title: '4 x 4', val: '444' },
+      { title: '5 x 5', val: '555' }, { title: '6 x 6', val: '666' }, { title: '7 x 7', val: '777' }],
     scramble: '',
-    bestTime: { raw: '--', formatted: '--' },
-    avg5: { raw: '--', formatted: '--' },
-    avg12: { raw: '--', formatted: '--' }
+    timerData: { sessionID: '', history: [], bestTime: 0, avg5: 0, avg12: 0 },
+    snackMessage: { activate: false, message: null, timeout: 5000 },
   }),
   created () {
     window.addEventListener('keydown', this.toggleClock)
@@ -98,6 +103,17 @@ export default {
   },
   mounted () {
     this.getScramble()
+  },
+  beforeRouteEnter (to, from, next) {
+    next(vm => {
+      vm.timerData = vm.$store.state.data.timer
+      if (vm.timerData.sessionID === '') vm.getLastSession()
+    })
+  },
+  beforeRouteLeave (to, from, next) {
+    this.$store.commit('saveTimerData', this.timerData)
+    console.log(this.$store.state.data.timer)
+    next()
   },
   destroyed () {
     window.removeEventListener('keydown', this.toggleClock)
@@ -109,6 +125,96 @@ export default {
     }
   },
   methods: {
+    formatTime (time) {
+      function pad (n, z) {
+        z = z || 2
+        return ('00' + n).slice(-z)
+      }
+      const ms = time % 1000
+      time = (time - ms) / 1000
+      const secs = time % 60
+      time = (time - secs) / 60
+      const mins = time % 60
+      return pad(mins) + ':' + pad(secs) + '.' + pad(ms, 3)
+    },
+    async newSession() {
+      const q = { query: 'mutation createsession { createSession { _id } }', operationName: 'createsession' }
+      fetch('/graphql', {
+        method: 'post',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(q)
+      }).then((response) => response.json())
+        .then((graphQlRes) => {
+          if (graphQlRes.data) {
+            this.timerData = { sessionID: '', history: [], bestTime: 0, avg5: 0, avg12: 0 }
+            this.timerData.sessionID = graphQlRes.data.createSession._id
+          } else {
+            this.showSnack(graphQlRes.errors[0].message)
+          }
+        })
+        .catch((err) => console.log(err))
+    },
+    async getLastSession () {
+      const q = { query: 'query getsession { getSession { _id } }', operationName: 'getsession' }
+      fetch('/graphql', {
+        method: 'post',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(q)
+      }).then((response) => response.json())
+        .then((graphQlRes) => {
+          if (graphQlRes.data) {
+            this.timerData.sessionID = graphQlRes.data.getSession._id
+            this.getLastSolves()
+          } else {
+            this.showSnack(graphQlRes.errors[0].message)
+          }
+        })
+        .catch((err) => console.log(err))
+    },
+    async getLastSolves () {
+      const q = { query: 'query solvemany { solveMany { time } }', operationName: 'solvemany' }
+      fetch('/graphql', {
+        method: 'post',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(q)
+      }).then((response) => response.json())
+        .then((graphQlRes) => {
+          if (graphQlRes.data) {
+            this.timerData.history = graphQlRes.data.solveMany.map(function (obj) {
+              return obj.time
+            })
+            this.updateStats()
+          } else {
+            this.showSnack(graphQlRes.errors[0].message)
+          }
+        })
+        .catch((err) => console.log(err))
+    },
+    async saveTime(time) {
+      const size = '_' + this.selectedSize.charAt(0) + 'x' + this.selectedSize.charAt(0)
+      const timeObj = {
+        query: 'mutation insertsolve ($time: Float!, $session: MongoID!, $size: EnumSolveSize) { ' +
+          'insertSolve(record: {time: $time, session: $session, size: $size }) ' +
+          '{ record { time, session, user, createdAt } } }',
+        variables: { time: time, session: this.timerData.sessionID, size: size },
+        operationName: 'insertsolve'
+      }
+      fetch('/graphql', {
+        method: 'post',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(timeObj)
+      }).then((response) => response.json())
+        .then((graphQlRes) => {
+          console.log(graphQlRes)
+          if (graphQlRes.data) {
+            this.timerData.history.unshift(time)
+            this.updateStats()
+          } else {
+            this.showSnack(graphQlRes.errors[0].message)
+          }
+        })
+        .catch((err) => console.log(err))
+    },
     swapMode (mode) {
       this.mode = mode
       if (mode === 'stopwatch') {
@@ -123,7 +229,7 @@ export default {
       if (this.mobile) {
         if (state === 'running') {
           this.$refs.timer.stop()
-          this.history.push(this.$refs.timer.timeElapsed)
+          this.timerData.history.unshift(this.$refs.timer.timeElapsed)
         } else if (state === 'stopped') {
           this.$refs.timer.start()
         }
@@ -141,8 +247,7 @@ export default {
         }
       } else if (event.keyCode === 13 && event.type === 'keydown') {
         if (this.mode === 'stopwatch') {
-          this.history.push({ raw: this.$refs.timer.timeElapsed, formatted: this.msToTime(this.$refs.timer.timeElapsed) })
-          this.updateStats()
+          this.saveTime(this.$refs.timer.timeElapsed)
         }
         this.$refs.timer.reset()
         this.actionEvent = true
@@ -161,21 +266,16 @@ export default {
     },
     updateStats () {
       // Update best
-      const lastIdx = this.history.length - 1
-      if (this.history.length === 1) {
-        this.bestTime = { raw: this.history[0].raw, formatted: this.history[0].formatted }
-      } else if (this.bestTime.raw > this.history[lastIdx].raw) {
-        this.bestTime = { raw: this.history[lastIdx].raw, formatted: this.history[lastIdx].formatted }
+      if (this.timerData.history.length >= 1) {
+        this.timerData.bestTime = Math.min(...this.timerData.history)
       }
       // Update avg 5
-      if (this.history.length >= 5) {
-        const raw = Math.floor((this.history.slice(-5).reduce((sum, { raw }) => sum + raw, 0)) / 5)
-        this.avg5 = { raw: raw, formatted: this.msToTime(raw) }
+      if (this.timerData.history.length >= 5) {
+        this.timerData.avg5 = Math.floor((this.timerData.history.slice(-5).reduce((sum, time) => sum + time) / 5))
       }
       // Update avg 12
-      if (this.history.length >= 12) {
-        const raw = Math.floor((this.history.slice(-12).reduce((sum, { raw }) => sum + raw, 0)) / 12)
-        this.avg12 = { raw: raw, formatted: this.msToTime(raw) }
+      if (this.timerData.history.length >= 12) {
+        this.timerData.avg12 = Math.floor((this.timerData.history.slice(-12).reduce((sum, time) => sum + time)) / 12)
       }
     },
     msToTime (s) {
@@ -189,6 +289,10 @@ export default {
       s = (s - secs) / 60
       const mins = s % 60
       return pad(mins) + ':' + pad(secs) + '.' + pad(ms, 3)
+    },
+    showSnack (message) {
+      this.snackMessage.message = message
+      this.snackMessage.activate = true
     }
   }
 }
@@ -238,6 +342,9 @@ export default {
     padding-left: 20px;
     font-size: 1.6vw;
   }
+  .centreTxt {
+    text-align: center;
+  }
   .scramble {
     font-size: 1.5vw;
     color: grey;
@@ -250,6 +357,10 @@ export default {
     margin-top: 15vh;
     width: 75%;
     min-height: 25vh;
+  }
+  .newSession {
+    color: #0275d8;
+    font-weight: bold;
   }
   .flash {
     color: red;

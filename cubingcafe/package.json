@@ -12,6 +12,8 @@
     "@josephuspaye/timer": "^0.1.1",
     "animejs": "^3.2.1",
     "apollo-boost": "^0.4.9",
+    "apollo-link-error": "^1.1.13",
+    "axios": "^0.21.1",
     "body-parser": "^1.19.0",
     "cookie": "^0.4.0",
     "core-js": "^3.6.5",
