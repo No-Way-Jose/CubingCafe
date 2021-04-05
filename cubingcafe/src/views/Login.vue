@@ -61,14 +61,14 @@
         <v-divider class="my-7" style="max-width: 450px;"/>
       </v-row>
       <v-row justify="center"><p>Already a member?</p></v-row>
-      <v-row justify="center"><v-btn class="methodBtn" color="#1791e8" text outlined @click="screen = 'Login'">Login</v-btn></v-row>
+      <v-row justify="center"><v-btn class="methodBtn" color="#1791e8" text outlined @click="toggleScreen('Login')">Login</v-btn></v-row>
     </div>
     <div v-if="screen === 'Login'">
       <v-row justify="center">
         <v-divider class="my-7" style="max-width: 450px;"/>
       </v-row>
       <v-row justify="center"><p>Don't have an account?</p></v-row>
-      <v-row justify="center"><v-btn class="methodBtn" color="#1791e8" text outlined @click="screen = 'SignUp'">Sign Up</v-btn></v-row>
+      <v-row justify="center"><v-btn class="methodBtn" color="#1791e8" text outlined @click="toggleScreen('SignUp')">Sign Up</v-btn></v-row>
     </div>
 
     <!-- Snackbar template -->
@@ -110,6 +110,11 @@ export default {
         }
       })
     },
+    toggleScreen (screen) {
+      this.screen = screen
+      this.$store.commit('resetAuthError')
+      this.userCredentials = { username: '', password: '' }
+    },
     async authChange(method) {
       let queryObj = {}
       let changeType = ''
@@ -138,6 +143,7 @@ export default {
             this.$store.commit('setUserState', graphQlRes.data[changeType].user)
             this.$router.push('/')
             this.$store.commit('resetAuthError')
+            this.$store.commit('initStore')
           } else {
             this.$store.state.authError.error = true
             this.$store.state.authError.message = graphQlRes.errors[0].message

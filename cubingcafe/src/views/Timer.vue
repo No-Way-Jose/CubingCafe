@@ -62,7 +62,7 @@
       </v-row>
       <v-row v-if="mobile" justify="center"><v-btn class="toggleBtn" color="#1791e8" outlined rounded v-on:click="toggleClock()">Toggle</v-btn></v-row>
       <v-row class="statsRow">
-        <v-col class="statHeader">Best<span class="stats">{{ formatTime(timerData.bestTime) }}</span></v-col>
+        <v-col class="statHeader">Best<span class="stats">{{ formatTime(timerData.best) }}</span></v-col>
         <v-col class="statHeader">AVG 5<span class="stats">{{ formatTime(timerData.avg5) }}</span></v-col>
         <v-col class="statHeader">AVG 12<span class="stats">{{ formatTime(timerData.avg12) }}</span></v-col>
       </v-row>
@@ -96,7 +96,7 @@ export default {
     size: [{ title: '2 x 2', val: '222' }, { title: '3 x 3', val: '333' }, { title: '4 x 4', val: '444' },
       { title: '5 x 5', val: '555' }, { title: '6 x 6', val: '666' }, { title: '7 x 7', val: '777' }],
     scramble: '',
-    timerData: { sessionID: '', history: [], bestTime: 0, avg5: 0, avg12: 0 },
+    timerData: { sessionID: '', history: [], best: 0, avg5: 0, avg12: 0 },
     snackMessage: { activate: false, message: null, timeout: 5000 },
   }),
   created () {
@@ -105,21 +105,19 @@ export default {
   },
   mounted () {
     this.getScramble()
-    if (this.$store.state.user.loggedIn) {
-      this.getLastSession()
-    } else {
-      this.timerData = { sessionID: '', history: [], bestTime: 0, avg5: 0, avg12: 0 }
-    }
   },
   beforeRouteEnter (to, from, next) {
     next(vm => {
-      vm.timerData = vm.$store.state.data.timer
-      if (vm.timerData.sessionID === '' && vm.$store.state.user.loggedIn) vm.getLastSession()
+      if (vm.$store.state.user.loggedIn) {
+        vm.timerData = vm.$store.state.data.timer
+        if (vm.timerData.sessionID === '') vm.getLastSession()
+      } else {
+        vm.timerData = { sessionID: '', history: [], best: 0, avg5: 0, avg12: 0 }
+      }
     })
   },
   beforeRouteLeave (to, from, next) {
     this.$store.commit('saveTimerData', this.timerData)
-    this.timerData = { sessionID: '', history: [], bestTime: 0, avg5: 0, avg12: 0 }
     next()
   },
   destroyed () {
@@ -153,7 +151,7 @@ export default {
       }).then((response) => response.json())
         .then((graphQlRes) => {
           if (graphQlRes.data) {
-            this.timerData = { sessionID: '', history: [], bestTime: 0, avg5: 0, avg12: 0 }
+            this.timerData = { sessionID: '', history: [], best: 0, avg5: 0, avg12: 0 }
             this.timerData.sessionID = graphQlRes.data.createSession._id
           } else {
             this.showSnack(graphQlRes.errors[0].message)
@@ -179,7 +177,9 @@ export default {
         .catch((err) => console.log(err))
     },
     async getLastSolves () {
-      const q = { query: 'query solvemany { solveMany { time } }', operationName: 'solvemany' }
+      const q = { query: 'query solvemany ($session: MongoID) { solveMany(filter: { session: $session })  { time } }',
+        variables: { session: this.timerData.sessionID },
+        operationName: 'solvemany' }
       fetch('/graphql', {
         method: 'post',
         headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
@@ -212,7 +212,6 @@ export default {
         body: JSON.stringify(timeObj)
       }).then((response) => response.json())
         .then((graphQlRes) => {
-          console.log(graphQlRes)
           if (graphQlRes.data) {
             this.timerData.history.unshift(time)
             this.updateStats()
@@ -277,9 +276,13 @@ export default {
       scrambler.drawScramble(this.$refs.scrambleImage, state.state, 500, 250)
     },
     updateStats () {
+      // Clear the stats
+      this.timerData.best = 0
+      this.timerData.avg5 = 0
+      this.timerData.avg12 = 0
       // Update best
       if (this.timerData.history.length >= 1) {
-        this.timerData.bestTime = Math.min(...this.timerData.history)
+        this.timerData.best = Math.min(...this.timerData.history)
       }
       // Update avg 5
       if (this.timerData.history.length >= 5) {

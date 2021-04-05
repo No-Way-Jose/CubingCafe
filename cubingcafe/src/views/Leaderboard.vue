@@ -46,10 +46,8 @@ export default {
       }).then((response) => response.json())
         .then((graphQlRes) => {
           if (graphQlRes.data) {
-            console.log(graphQlRes.data)
             for (let entry in graphQlRes.data.userMany) {
               let record = graphQlRes.data.userMany[entry]
-              console.log(record)
               record.rank = rank++
               this.leaderboard.push(record)
             }
