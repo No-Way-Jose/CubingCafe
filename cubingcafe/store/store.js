@@ -31,6 +31,9 @@ export default new Vuex.Store({
     saveTimerData: (state, data) => {
       state.data.timer = data
     },
+    wipeStore: (state) => {
+      state.data.timer = { sessionID: '', history: [], best: 0, avg5: 0, avg12: 0 }
+    },
     resetAuthError: (state) => {
       state.authError.error = false
       state.authError.message = ''

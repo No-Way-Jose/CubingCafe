@@ -68,6 +68,7 @@ export default {
           console.log(graphQlRes)
           if (graphQlRes.data.signOut.completed) {
             this.$store.commit('setUserState', false)
+            this.$store.commit('wipeStore')
             if (this.$route.name !== 'home') {
               this.$router.push('/')
             } else {

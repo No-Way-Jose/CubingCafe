@@ -16,7 +16,9 @@
               <v-btn v-on="on" rounded elevation="0" color="transparent"><v-icon class="mr-3" color="#1791e8">mdi-history</v-icon>History</v-btn>
             </template>
             <v-list class="history">
-              <v-list-item @click="newSession"><v-list-item-title class="newSession">New Session</v-list-item-title></v-list-item>
+              <v-list-item v-if="this.$store.state.user.loggedIn" @click="newSession">
+                <v-list-item-title class="newSession">New Session</v-list-item-title>
+              </v-list-item>
               <v-list-item v-for="(time, idx) in timerData.history" :key="idx">
                 <v-list-item-title>{{ formatTime(time) }}</v-list-item-title>
               </v-list-item>
@@ -103,16 +105,21 @@ export default {
   },
   mounted () {
     this.getScramble()
+    if (this.$store.state.user.loggedIn) {
+      this.getLastSession()
+    } else {
+      this.timerData = { sessionID: '', history: [], bestTime: 0, avg5: 0, avg12: 0 }
+    }
   },
   beforeRouteEnter (to, from, next) {
     next(vm => {
       vm.timerData = vm.$store.state.data.timer
-      if (vm.timerData.sessionID === '') vm.getLastSession()
+      if (vm.timerData.sessionID === '' && vm.$store.state.user.loggedIn) vm.getLastSession()
     })
   },
   beforeRouteLeave (to, from, next) {
     this.$store.commit('saveTimerData', this.timerData)
-    console.log(this.$store.state.data.timer)
+    this.timerData = { sessionID: '', history: [], bestTime: 0, avg5: 0, avg12: 0 }
     next()
   },
   destroyed () {
@@ -180,7 +187,7 @@ export default {
       }).then((response) => response.json())
         .then((graphQlRes) => {
           if (graphQlRes.data) {
-            this.timerData.history = graphQlRes.data.solveMany.map(function (obj) {
+            this.timerData.history = graphQlRes.data.solveMany.reverse().map(function (obj) {
               return obj.time
             })
             this.updateStats()
@@ -247,7 +254,12 @@ export default {
         }
       } else if (event.keyCode === 13 && event.type === 'keydown') {
         if (this.mode === 'stopwatch') {
-          this.saveTime(this.$refs.timer.timeElapsed)
+          if (this.$store.state.user.loggedIn) {
+            this.saveTime(this.$refs.timer.timeElapsed)
+          } else {
+            this.timerData.history.unshift(this.$refs.timer.timeElapsed)
+            this.updateStats()
+          }
         }
         this.$refs.timer.reset()
         this.actionEvent = true

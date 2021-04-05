@@ -1,13 +1,13 @@
 <template>
   <v-container class="leaderContainer">
+    <v-snackbar color="error" class="snackMessage" v-model="snackMessage.activate" :timeout="snackMessage.timeout"
+                top right transition="slide-y-transition">{{ snackMessage.message }}
+    </v-snackbar>
     <v-col>
       <v-row>
-        <v-select
-          :items="items"
-          label="Select different leaderboard ..."
-        ></v-select>
+        <v-select :items="items" label="Select different leaderboard ..."></v-select>
       </v-row>
-      <v-data-table :headers="headers" :items="desserts" class="pt-12">
+      <v-data-table :headers="headers" :items="leaderboard" class="pt-12">
         <template v-slot:header.name="{ header }">
           {{ header.text.toUpperCase() }}
         </template>
@@ -21,24 +21,49 @@
 export default {
   name: 'Leaderboard',
   data: () => ({
+    snackMessage: { activate: false, message: null, timeout: 5000 },
     items: ['2 * 2', '3 * 3', '4 * 4', '5 * 5'],
     headers: [
       { text: 'Rank', align: 'start', value: 'rank' },
-      { text: 'Username', value: 'username' },
-      { text: 'Best Time', value: 'best' },
-      { text: '# of Solves', value: 'solves' }
+      { text: 'Username', value: '_id' },
+      { text: 'Elo', value: 'elo' },
+      { text: 'Wins', value: 'wins' },
+      { text: 'Losses', value: 'losses' }
     ],
-    desserts: [
-      { rank: 1, username: 'lynjust2', solves: 6.0, best: 24 },
-      { rank: 2, username: 'asdasdasd', solves: 6.0, best: 24 },
-      { rank: 3, username: 'sdfrjdd', solves: 6.0, best: 24 },
-      { rank: 4, username: 'ddfg2344', solves: 6.0, best: 24 },
-      { rank: 5, username: 'fdhjy33', solves: 6.0, best: 24 },
-      { rank: 6, username: 'dfgdfg33', solves: 6.0, best: 24 },
-      { rank: 7, username: 'efg111', solves: 6.0, best: 24 },
-      { rank: 8, username: 'dfgdfgfd1123', solves: 6.0, best: 24 }
-    ]
-  })
+    leaderboard: []
+  }),
+  mounted () {
+    this.getLeaders()
+  },
+  methods: {
+    async getLeaders () {
+      let rank = 1
+      const q = { query: 'query usermany { userMany(sort: ELO_DESC) { _id, elo, wins, losses, updatedAt } }', operationName: 'usermany' }
+      fetch('/graphql', {
+        method: 'post',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(q)
+      }).then((response) => response.json())
+        .then((graphQlRes) => {
+          if (graphQlRes.data) {
+            console.log(graphQlRes.data)
+            for (let entry in graphQlRes.data.userMany) {
+              let record = graphQlRes.data.userMany[entry]
+              console.log(record)
+              record.rank = rank++
+              this.leaderboard.push(record)
+            }
+          } else {
+            this.showSnack(graphQlRes.errors[0].message)
+          }
+        })
+        .catch((err) => console.log(err))
+    },
+    showSnack (message) {
+      this.snackMessage.message = message
+      this.snackMessage.activate = true
+    }
+  }
 }
 </script>
 
