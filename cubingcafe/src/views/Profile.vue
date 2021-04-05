@@ -1,7 +1,10 @@
 <template>
   <v-container class="profileContainer">
+    <v-snackbar v-bind:color="snackMessage.colour" class="snackMessage" v-model="snackMessage.activate" :timeout="snackMessage.timeout"
+                top right transition="slide-y-transition">{{ snackMessage.message }}
+    </v-snackbar>
     <v-row class="pt-10 pb-12">
-      <h2>Quick Stats</h2>
+      <h1>Quick Stats</h1>
     </v-row>
     <v-row>
       <v-col>
@@ -25,20 +28,20 @@
       </v-col>
     </v-row>
     <v-row class="py-12">
-      <h2>History & Graphs</h2>
+      <h1>History & Graphs</h1>
+      <v-btn small outlined rounded color="primary" class="ml-6 mt-3" @click="getUserData">Load More</v-btn>
     </v-row>
     <v-row>
-      <v-col cols="6">
+      <v-col cols="7">
         <v-data-table :headers="headers" :items="history">
           <template v-slot:header.name="{ header }">{{ header.text.toUpperCase() }}</template>
         </v-data-table>
-
       </v-col>
-      <v-col cols="6">
+      <v-col cols="5">
         <v-row class="pa-4">
-          <v-btn elevation="0" v-on:click="chartSeek(0)" color="transparent"><v-icon>mdi-skip-previous</v-icon></v-btn>
+          <v-btn elevation="0" @click="chartSeek(0)" color="transparent"><v-icon>mdi-skip-previous</v-icon></v-btn>
           <h2 class="px-4">{{ selectedChart.chart.options.title }}</h2>
-          <v-btn elevation="0" v-on:click="chartSeek(1)" color="transparent"><v-icon>mdi-skip-next</v-icon></v-btn>
+          <v-btn elevation="0" @click="chartSeek(1)" color="transparent"><v-icon>mdi-skip-next</v-icon></v-btn>
         </v-row>
         <v-row>
           <GChart class="charts" v-bind:type="selectedChart.chart.type" v-bind:data="selectedChart.chart.data" v-bind:options="selectedChart.chart.options"/>
@@ -53,6 +56,7 @@
 export default {
   name: 'Profile',
   data: () => ({
+    snackMessage: { activate: false, message: null, colour: 'error', timeout: 5000 },
     selectedChart: { idx: 0, chart: { type: 'PieChart', data: [['Cube Frequency', ''], ['3 * 3', 60], ['4 * 4', 40]], options: { pieHole: 0.4, title: 'Cube Frequency' } } },
     chartData: [
       { type: 'PieChart', data: [['Cube Frequency', ''], ['3 * 3', 60], ['4 * 4', 40]], options: { pieHole: 0.4, title: 'Cube Frequency' } },
@@ -62,20 +66,18 @@ export default {
     headers: [
       { text: '#', value: 'id' },
       { text: 'Time', value: 'time' },
-      { text: 'Cube', value: 'cube' },
-      { text: 'Date', value: 'date' }
+      { text: 'Cube', value: 'size' },
+      { text: 'Session', value: 'session' },
+      { text: 'Date', value: 'updatedAt' }
     ],
-    history: [
-      { id: 1, time: '1.23', cube: '3 * 3', date: 'Jan' },
-      { id: 2, time: '1.233', cube: '3 * 3', date: 'Jan' },
-      { id: 3, time: '1.243', cube: '2 * 2', date: 'Feb' },
-      { id: 4, time: '1.253', cube: '2 * 2', date: 'Jan' },
-      { id: 5, time: '1.273', cube: '3 * 3', date: 'Mar' },
-      { id: 6, time: '1.263', cube: '3 * 3', date: 'Jan' },
-      { id: 7, time: '1.233', cube: '2 * 2', date: 'Jan' },
-      { id: 8, time: '1.23', cube: '3 * 3', date: 'Jun' }
-    ]
+    history: [],
+    pagination: { limit: 20, count: 0 }
   }),
+  beforeRouteEnter (to, from, next) {
+    next(vm => {
+      vm.getUserData()
+    })
+  },
   methods: {
     chartSeek (direction) {
       let nextChart = 0
@@ -87,7 +89,55 @@ export default {
       }
       this.selectedChart.idx = nextChart
       this.selectedChart.chart = this.chartData[nextChart]
-    }
+    },
+    async getUserData () {
+      let id = 1
+      const q = { query: 'query solvemany ($skip: Int) { solveMany(sort:UPDATEDAT_DESC, limit: 20, skip: $skip) { time, size, session, updatedAt } }',
+        variables: { skip: this.pagination.count * this.pagination.limit },
+        operationName: 'solvemany' }
+      fetch('/graphql', {
+        method: 'post',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(q)
+      }).then((response) => response.json())
+        .then((graphQlRes) => {
+          if (graphQlRes.data) {
+            if (graphQlRes.data.solveMany.length > 0) {
+              for (let entry in graphQlRes.data.solveMany) {
+                let record = graphQlRes.data.solveMany[entry]
+                record.id = id++
+                record.time = this.msToTime(record.time)
+                record.updatedAt = record.updatedAt.substring(0,10)
+                record.size = record.size.substring(1, 4)
+                this.history.push(record)
+              }
+            } else {
+              this.showSnack('INFO: No more data to load!', 'primary')
+            }
+            this.pagination.count += 1
+          } else {
+            this.showSnack(graphQlRes.errors[0].message, 'error')
+          }
+        })
+        .catch((err) => console.log(err))
+    },
+    msToTime (s) {
+      function pad (n, z) {
+        z = z || 2
+        return ('00' + n).slice(-z)
+      }
+      const ms = s % 1000
+      s = (s - ms) / 1000
+      const secs = s % 60
+      s = (s - secs) / 60
+      const mins = s % 60
+      return pad(mins) + ':' + pad(secs) + '.' + pad(ms, 3)
+    },
+    showSnack (message, colour) {
+      this.snackMessage.colour = colour
+      this.snackMessage.message = message
+      this.snackMessage.activate = true
+    },
   }
 }
 </script>
@@ -100,6 +150,9 @@ export default {
   .charts{
     width: 100%;
     min-height: 30vh;
+  }
+  .snackMessage {
+    margin-top: 85px;
   }
 
 </style>

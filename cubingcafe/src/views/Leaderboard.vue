@@ -70,5 +70,8 @@ export default {
     max-width: 1400px;
     padding: 20px 50px 0 50px;
   }
+  .snackMessage {
+    margin-top: 85px;
+  }
 
 </style>

@@ -1,8 +1,8 @@
 <template>
   <v-container class="solverContainer">
     <!-- Snackbar template -->
-    <v-snackbar class="snackMessage" v-bind:color="snackColour" v-model="snackMessage.activate" :timeout="snackMessage.timeout" top right transition="slide-y-transition">
-      {{ snackMessage.message }}
+    <v-snackbar class="snackMessage" v-bind:color="snackMessage.colour" v-model="snackMessage.activate" :timeout="snackMessage.timeout"
+                top right transition="slide-y-transition">{{ snackMessage.message }}
     </v-snackbar>
 
     <v-row justify="center" class="pb-12">
@@ -132,7 +132,6 @@ export default {
   data: () => ({
     selectedColour: 'redBlock',
     notSolved: true,
-    snackColour: 'error',
     colours: {
       6: { class: 'greenBlock', limit: 9, idx: 0 },
       7: { class: 'redBlock', limit: 9, idx: 1 },
@@ -158,7 +157,7 @@ export default {
     instructions: [],
     currentState: { alg: '', sol: '', states: { cross: '', f2l: '', oll: '', pll: '' } },
     moveMask: { 'u\'': '2Uw\'', 'u': '2Uw', 'b': '2Bw', 'b\'': '2Bw\'', 'd': '2Dw', 'd\'': '2Dw\'' },
-    snackMessage: { activate: false, message: null, timeout: 5000 },
+    snackMessage: { activate: false, message: null, colour: 'error', timeout: 5000 },
     scrambleInput: null,
     validMoves: 'RLBDUF'
   }),
@@ -253,7 +252,7 @@ export default {
 
     },
     showSnack (message, colour) {
-      this.snackColour = colour
+      this.snackMessage.colour = colour
       this.snackMessage.message = message
       this.snackMessage.activate = true
     },

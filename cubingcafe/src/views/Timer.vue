@@ -377,6 +377,9 @@ export default {
     color: #0275d8;
     font-weight: bold;
   }
+  .snackMessage {
+    margin-top: 85px;
+  }
   .flash {
     color: red;
     animation-name: flash;
