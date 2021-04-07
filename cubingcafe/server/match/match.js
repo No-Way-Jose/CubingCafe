@@ -33,6 +33,26 @@ const matchSchema = new Schema(
   { timestamps: true }
 );
 
+matchSchema.statics.findWins = function (user) {
+  return this.find(
+    {
+      $or: [
+        { $and: [{ user1: user }, { $expr: { $gt: ['$user1Time', '$user2Time'] } }] },
+        { $and: [{ user2: user }, { $expr: { $gt: ['$user2Time', '$user1Time'] } }] }
+      ]
+    });
+};
+
+matchSchema.statics.findLosses = function (user) {
+  return this.find(
+    {
+      $or: [
+        { $and: [{ user1: user }, { $expr: { $lt: ['$user1Time', '$user2Time'] } }] },
+        { $and: [{ user2: user }, { $expr: { $lt: ['$user2Time', '$user1Time'] } }] }
+      ]
+    });
+};
+
 const MatchModel = mongoose.model('Match', matchSchema);
 const QueueModel = mongoose.model('QueuedUsers', queueSchema);
 

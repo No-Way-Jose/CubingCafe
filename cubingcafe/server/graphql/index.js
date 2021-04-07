@@ -3,6 +3,7 @@ const { schemaComposer } = require('graphql-compose');
 require('./completed');
 const { UserTC } = require('../user');
 const { SessionTC, SolveTC } = require('../solve');
+const { MatchTC, QueueTC } = require('../match');
 
 const isAuthenticated = async (resolve, source, args, context, info) => {
   const user = context.session.username;
@@ -30,7 +31,10 @@ schemaComposer.Query.addFields({
   userMany: UserTC.getResolver('findMany'),
   sessionMany: SessionTC.getResolver('findMany', [isAuthenticated, setUserInFilter]),
   solveMany: SolveTC.getResolver('findMany', [isAuthenticated, setUserInFilter]),
-  getSession: SessionTC.getResolver('getSession', [isAuthenticated])
+  getSession: SessionTC.getResolver('getSession', [isAuthenticated]),
+  matchMany: MatchTC.getResolver('findMany', [isAuthenticated]),
+  queueMany: QueueTC.getResolver('findMany', [isAuthenticated]),
+  userWinsOrLosses: MatchTC.getResolver('findUserWinsOrLosses', [isAuthenticated])
 });
 
 schemaComposer.Mutation.addFields({
