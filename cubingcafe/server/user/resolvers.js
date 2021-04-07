@@ -84,13 +84,12 @@ const userCount = {
   resolve: async () => {
     return new Promise((resolve, reject) => {
       UserModel.getNumOfUsers().then((ses) => {
-        console.log(ses)
         return resolve({ max: ses });
       }).catch((err) => {
         return reject(new Error('Internal Server Error: ' + err));
       });
     });
   }
-}
+};
 
 module.exports = { signIn, signUp, signOut, userCount };

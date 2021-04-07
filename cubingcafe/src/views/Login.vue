@@ -9,7 +9,7 @@
       </v-row>
       <ValidationObserver ref="observer" v-slot="{ validate }">
         <form>
-          <ValidationProvider v-slot="{ errors }" name="Email" rules="required">
+          <ValidationProvider v-slot="{ errors }" name="Username" rules="required">
             <v-text-field
               color="#1791e8" prepend-inner-icon="mdi-account" placeholder="Username" :error-messages="errors"
               v-model="userCredentials.username" required solo

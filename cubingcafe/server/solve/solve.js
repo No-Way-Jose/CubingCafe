@@ -34,7 +34,7 @@ solveSchema.statics.getStats = function (username) {
 };
 
 solveSchema.statics.solveCount = function (username) {
-  return this.count({ user: username })
+  return this.count({ user: username });
 };
 
 const SolveModel = mongoose.model('Solve', solveSchema);
