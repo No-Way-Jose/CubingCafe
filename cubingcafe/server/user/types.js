@@ -10,4 +10,9 @@ schemaComposer.createObjectTC({
   fields: { user: 'String!' }
 });
 
+schemaComposer.createObjectTC({
+  name: 'NumOfUsers',
+  fields: { max: 'Float' }
+});
+
 module.exports = UserTC;

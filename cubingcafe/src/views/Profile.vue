@@ -6,49 +6,46 @@
     <v-row class="pt-10 pb-12">
       <h1>Quick Stats</h1>
     </v-row>
-    <v-row>
+    <v-row class="pb-12">
       <v-col>
-        <v-row justify="center"><v-icon large class="pr-2" color="warning">mdi-run-fast</v-icon><h2>4 Hours</h2></v-row>
-        <v-row justify="center" class="pt-4">Fastest Solve</v-row>
-      </v-col>
-      <v-divider vertical class="my-3"/>
-      <v-col>
-        <v-row justify="center"><v-icon large class="pr-2" color="pink">mdi-sleep</v-icon><h2>50 Hours</h2></v-row>
-        <v-row justify="center" class="pt-4">Slowest Solve</v-row>
-      </v-col>
-      <v-divider vertical class="my-3"/>
-      <v-col>
-        <v-row justify="center"><v-icon large class="pr-2" color="primary">mdi-star</v-icon><h2>3 * 3</h2></v-row>
+        <v-row justify="center"><v-icon large class="pr-2" color="primary">mdi-star</v-icon><h2>{{ userStats.fav }}</h2></v-row>
         <v-row justify="center" class="pt-4">Favourite Cube</v-row>
       </v-col>
       <v-divider vertical class="my-3"/>
       <v-col>
-        <v-row justify="center"><v-icon large class="pr-2" color="red">mdi-timer-outline</v-icon><h2>100s</h2></v-row>
+        <v-row justify="center"><v-icon large class="pr-2" color="warning">mdi-run-fast</v-icon><h2>{{ msToTime(userStats.best) }}</h2></v-row>
+        <v-row justify="center" class="pt-4">Fastest Solve</v-row>
+      </v-col>
+      <v-divider vertical class="my-3"/>
+      <v-col>
+        <v-row justify="center"><v-icon large class="pr-2" color="pink">mdi-sleep</v-icon><h2>{{ msToTime(userStats.worst) }}</h2></v-row>
+        <v-row justify="center" class="pt-4">Slowest Solve</v-row>
+      </v-col>
+      <v-divider vertical class="my-3"/>
+      <v-col>
+        <v-row justify="center"><v-icon large class="pr-2" color="red">mdi-timer-outline</v-icon><h2>{{ msToTime(userStats.avg) }}</h2></v-row>
         <v-row justify="center" class="pt-4">Overall Avg Time</v-row>
       </v-col>
     </v-row>
-    <v-row class="py-12">
-      <h1>History & Graphs</h1>
-      <v-btn small outlined rounded color="primary" class="ml-6 mt-3" @click="getUserData">Load More</v-btn>
+    <v-row class="pt-12">
+      <v-col cols="7">
+        <v-row><h1>Solve History</h1></v-row>
+      </v-col>
+      <v-col cols="5">
+        <h1>Cube Demographic</h1>
+      </v-col>
     </v-row>
     <v-row>
       <v-col cols="7">
-        <v-data-table :headers="headers" :items="history">
+        <v-data-table :headers="headers" :items="solves.history" :loading="solves.loading"
+                      @update:options="updateHistory" :server-items-length="solves.max">
           <template v-slot:header.name="{ header }">{{ header.text.toUpperCase() }}</template>
         </v-data-table>
       </v-col>
       <v-col cols="5">
-        <v-row class="pa-4">
-          <v-btn elevation="0" @click="chartSeek(0)" color="transparent"><v-icon>mdi-skip-previous</v-icon></v-btn>
-          <h2 class="px-4">{{ selectedChart.chart.options.title }}</h2>
-          <v-btn elevation="0" @click="chartSeek(1)" color="transparent"><v-icon>mdi-skip-next</v-icon></v-btn>
-        </v-row>
-        <v-row>
-          <GChart class="charts" v-bind:type="selectedChart.chart.type" v-bind:data="selectedChart.chart.data" v-bind:options="selectedChart.chart.options"/>
-        </v-row>
+        <GChart class="charts" v-bind:type="selectedChart.type" v-bind:data="selectedChart.data" v-bind:options="selectedChart.options"/>
       </v-col>
     </v-row>
-
   </v-container>
 </template>
 
@@ -57,43 +54,42 @@ export default {
   name: 'Profile',
   data: () => ({
     snackMessage: { activate: false, message: null, colour: 'error', timeout: 5000 },
-    selectedChart: { idx: 0, chart: { type: 'PieChart', data: [['Cube Frequency', ''], ['3 * 3', 60], ['4 * 4', 40]], options: { pieHole: 0.4, title: 'Cube Frequency' } } },
-    chartData: [
-      { type: 'PieChart', data: [['Cube Frequency', ''], ['3 * 3', 60], ['4 * 4', 40]], options: { pieHole: 0.4, title: 'Cube Frequency' } },
-      { type: 'ColumnChart', data: [['', ''], ['New York City, NY', 8175000], ['Los Angeles, CA', 3792000], ['Chicago, IL', 2695000], ['Houston, TX', 2099000]], options: { title: 'IDK' } },
-      { type: 'PieChart', data: [['Cube Frequency', ''], ['3 * 3', 60], ['4 * 4', 40]], options: { pieHole: 0.4, title: 'Cube Frequency' } }
-    ],
-    headers: [
-      { text: '#', value: 'id' },
-      { text: 'Time', value: 'time' },
-      { text: 'Cube', value: 'size' },
-      { text: 'Session', value: 'session' },
-      { text: 'Date', value: 'updatedAt' }
-    ],
-    history: [],
-    pagination: { limit: 20, count: 0 }
+    selectedChart: { type: 'PieChart', data: [['Cube Frequency', '']], options: { pieHole: 0.4 } },
+    headers: [{ text: '#', value: 'id' }, { text: 'Time', value: 'time' }, { text: 'Cube', value: 'size' }, { text: 'Date', value: 'updatedAt' }],
+    solves: { max: 0, loading: true, history: [] },
+    userStats: { fav: '3 x 3', avg: 0, best: 0, worst: 0 }
   }),
   beforeRouteEnter (to, from, next) {
     next(vm => {
-      vm.getUserData()
+      vm.getUserStats()
     })
   },
   methods: {
-    chartSeek (direction) {
-      let nextChart = 0
-      const numOfCharts = this.chartData.length
-      if (direction) {
-        nextChart = (((this.selectedChart.idx + 1) % numOfCharts) + numOfCharts) % numOfCharts
-      } else {
-        nextChart = (((this.selectedChart.idx - 1) % numOfCharts) + numOfCharts) % numOfCharts
-      }
-      this.selectedChart.idx = nextChart
-      this.selectedChart.chart = this.chartData[nextChart]
+    updateHistory (info) {
+      this.solves.loading = true
+      this.getSolveCount(info)
     },
-    async getUserData () {
-      let id = 1
-      const q = { query: 'query solvemany ($skip: Int) { solveMany(sort:UPDATEDAT_DESC, limit: 20, skip: $skip) { time, size, session, updatedAt } }',
-        variables: { skip: this.pagination.count * this.pagination.limit },
+    async getSolveCount (info) {
+      const q = { query: 'query solves { solveCount { solves } }', operationName: 'solves' }
+      fetch('/graphql', {
+        method: 'post',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(q)
+      }).then((response) => response.json())
+        .then((graphQlRes) => {
+          if (graphQlRes.data) {
+            this.solves.max = graphQlRes.data.solveCount.solves
+            this.getSolveHistory(info.page, info.itemsPerPage)
+          } else {
+            this.showSnack(graphQlRes.errors[0].message)
+          }
+        })
+        .catch((err) => console.log(err))
+    },
+    async getSolveHistory (page, limit) {
+      let id = 1 + ((page-1) * limit)
+      const q = { query: 'query solvemany ($skip: Int, $limit: Int) { solveMany(sort:UPDATEDAT_DESC, limit: $limit, skip: $skip) { time, size, updatedAt } }',
+        variables: { skip: ((page-1) * limit), limit: limit  },
         operationName: 'solvemany' }
       fetch('/graphql', {
         method: 'post',
@@ -102,19 +98,43 @@ export default {
       }).then((response) => response.json())
         .then((graphQlRes) => {
           if (graphQlRes.data) {
-            if (graphQlRes.data.solveMany.length > 0) {
-              for (let entry in graphQlRes.data.solveMany) {
-                let record = graphQlRes.data.solveMany[entry]
-                record.id = id++
-                record.time = this.msToTime(record.time)
-                record.updatedAt = record.updatedAt.substring(0,10)
-                record.size = record.size.substring(1, 4)
-                this.history.push(record)
-              }
-            } else {
-              this.showSnack('INFO: No more data to load!', 'primary')
+            this.solves.history = []
+            for (let entry in graphQlRes.data.solveMany) {
+              let record = graphQlRes.data.solveMany[entry]
+              record.id = id++
+              record.time = this.msToTime(record.time)
+              record.updatedAt = record.updatedAt.substring(0,10)
+              record.size = record.size.substring(1, 4)
+              this.solves.history.push(record)
             }
-            this.pagination.count += 1
+            this.solves.loading = false
+          } else {
+            this.showSnack(graphQlRes.errors[0].message, 'error')
+          }
+        })
+        .catch((err) => console.log(err))
+    },
+    async getUserStats () {
+      const q = { query: 'query getstats { getStats { _id, slowest, fastest, avg, count } }', operationName: 'getstats' }
+      fetch('/graphql', {
+        method: 'post',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(q)
+      }).then((response) => response.json())
+        .then((graphQlRes) => {
+          if (graphQlRes.data) {
+            const data = graphQlRes.data.getStats
+            this.userStats.fav = data[0]._id.substring(1)
+            this.userStats.worst = data[0].slowest
+            this.userStats.best = data[0].fastest
+            this.userStats.avg = data[0].avg
+
+            for (let entry in data) {
+              let record = []
+              record.push(data[entry]._id.substring(1))
+              record.push(data[entry].count)
+              this.selectedChart.data.push(record)
+            }
           } else {
             this.showSnack(graphQlRes.errors[0].message, 'error')
           }
@@ -149,7 +169,7 @@ export default {
   }
   .charts{
     width: 100%;
-    min-height: 30vh;
+    min-height: 40vh;
   }
   .snackMessage {
     margin-top: 85px;
