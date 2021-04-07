@@ -20,22 +20,25 @@ export default {
   name: 'Leaderboard',
   data: () => ({
     snackMessage: { activate: false, message: null, timeout: 5000 },
-    leaders: { max: 0, loading: true, leaderboard: [] },
+    leaders: { max: 0, loading: true, order: 'ELO_DESC', leaderboard: [] },
     headers: [
-      { text: 'Rank', align: 'start', value: 'rank' },
-      { text: 'Username', value: '_id' },
-      { text: 'Elo', value: 'elo' },
+      { text: 'Rank', align: 'start', value: 'rank', sortable: false },
+      { text: 'Username', value: '_id', sortable: false },
+      { text: 'Elo', value: 'elo'},
       { text: 'Wins', value: 'wins' },
       { text: 'Losses', value: 'losses' }
     ]
   }),
-  mounted () {
-    this.updateBoard()
-  },
   methods: {
-    updateBoard (info) {
+    updateBoard (e) {
       this.leaders.loading = true
-      this.getUserCount(info)
+      let order = false
+      if (e.sortBy.length > 0) {
+        const dir = (e.sortDesc[0]) ? '_DESC' : '_ASC'
+        order = e.sortBy[0].toUpperCase() + dir
+      }
+      if (order && (order !== this.leaders.order)) this.leaders.order = order
+      this.getUserCount(e)
     },
     async getUserCount (info) {
       const q = { query: 'query users { userCount { max} }', operationName: 'users' }
@@ -56,8 +59,9 @@ export default {
     },
     async getLeaders (page, limit) {
       let rank = 1 + ((page-1) * limit)
-      const q = { query: 'query usermany ($skip: Int, $limit: Int) { userMany(sort: ELO_DESC, limit: $limit, skip: $skip) { _id, elo, wins, losses, updatedAt } }',
-        variables: { skip: ((page-1) * limit), limit: limit },
+      const q = { query: 'query usermany ($skip: Int, $limit: Int, $sort: SortFindManyUserInput) { ' +
+          'userMany(sort: $sort, limit: $limit, skip: $skip) { _id, elo, wins, losses, updatedAt } }',
+        variables: { sort: this.leaders.order, skip: ((page-1) * limit), limit: limit },
         operationName: 'usermany' }
       fetch('/graphql', {
         method: 'post',

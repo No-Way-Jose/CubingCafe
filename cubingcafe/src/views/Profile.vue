@@ -55,8 +55,13 @@ export default {
   data: () => ({
     snackMessage: { activate: false, message: null, colour: 'error', timeout: 5000 },
     selectedChart: { type: 'PieChart', data: [['Cube Frequency', '']], options: { pieHole: 0.4 } },
-    headers: [{ text: '#', value: 'id' }, { text: 'Time', value: 'time' }, { text: 'Cube', value: 'size' }, { text: 'Date', value: 'updatedAt' }],
-    solves: { max: 0, loading: true, history: [] },
+    headers: [
+      { text: '#', value: 'id', sortable: false },
+      { text: 'Time', value: 'time' },
+      { text: 'Cube', value: 'size' },
+      { text: 'Date', value: 'updatedAt' }
+      ],
+    solves: { max: 0, loading: true, order: 'UPDATEDAT_DESC', history: [] },
     userStats: { fav: '3 x 3', avg: 0, best: 0, worst: 0 }
   }),
   beforeRouteEnter (to, from, next) {
@@ -65,9 +70,15 @@ export default {
     })
   },
   methods: {
-    updateHistory (info) {
+    updateHistory (e) {
       this.solves.loading = true
-      this.getSolveCount(info)
+      let order = false
+      if (e.sortBy.length > 0) {
+        const dir = (e.sortDesc[0]) ? '_DESC' : '_ASC'
+        order = e.sortBy[0].toUpperCase() + dir
+      }
+      if (order && (order !== this.solves.order)) this.solves.order = order
+      this.getSolveCount(e)
     },
     async getSolveCount (info) {
       const q = { query: 'query solves { solveCount { solves } }', operationName: 'solves' }
@@ -88,8 +99,9 @@ export default {
     },
     async getSolveHistory (page, limit) {
       let id = 1 + ((page-1) * limit)
-      const q = { query: 'query solvemany ($skip: Int, $limit: Int) { solveMany(sort:UPDATEDAT_DESC, limit: $limit, skip: $skip) { time, size, updatedAt } }',
-        variables: { skip: ((page-1) * limit), limit: limit  },
+      const q = { query: 'query solvemany ($skip: Int, $limit: Int, $sort: SortFindManySolveInput) { ' +
+          'solveMany(sort: $sort, limit: $limit, skip: $skip) { time, size, updatedAt } }',
+        variables: { sort: this.solves.order, skip: ((page-1) * limit), limit: limit  },
         operationName: 'solvemany' }
       fetch('/graphql', {
         method: 'post',
