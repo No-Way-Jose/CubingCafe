@@ -71,7 +71,7 @@ export default {
     showStart: false,
     queueSize: '',
     discBtnTxt: 'Disconnect',
-    readyBtn: { userReady: 'My Scramble is good!', userStarted: false, oppReady: 'Your Scramble is good!', oppStarted: false},
+    readyBtn: { userReady: 'My Scramble is good!', userStarted: false, oppReady: 'Your Scramble is good!', oppStarted: false },
     scramble: { moves: '', confirmed: false, oppScramble: 'error', myScramble: 'primary' },
     initialConnection: true,
     playerState: {},
@@ -120,14 +120,14 @@ export default {
       this.timer = new utils.Stopwatch(this.$refs.userStopwatch)
       this.opponentTimer = new utils.Stopwatch(this.$refs.oppStopwatch)
       this.currUser = this.$store.state.user.displayName
-      api.onLocalStreamUpdate(this.localStreamUpdate);
+      api.onLocalStreamUpdate(this.localStreamUpdate)
     },
     keyDown (event) {
-      if (this.keysPressed[event.code]) return
-      this.keysPressed[event.code] = true
       switch (event.code) {
         case 'Space':
           event.preventDefault()
+          if (this.keysPressed[event.code]) break
+          this.keysPressed[event.code] = true
           if (this.solveComplete) return
           if (this.timer.running()) {
             this.solveComplete = true
@@ -202,7 +202,7 @@ export default {
           seconds = seconds - 1
           cntdElm.innerHTML = seconds
           if (seconds <= 0) {
-            this.showStart = true;
+            this.showStart = true
             // cntdElm.innerHTML = 'Release spacebar to start your timer'
             clearInterval(this.matchCountdown)
             this.startOnRelease = true
@@ -226,8 +226,8 @@ export default {
       }
     },
     confirmScramble () {
-      this.setConfirmed('opponent', true);
-      api.sendCfmScramble();
+      this.setConfirmed('opponent', true)
+      api.sendCfmScramble()
     },
     setMatchDetails (match, userKey, opponentKey) {
       this.opponentUsername = match[`${opponentKey}`]
@@ -261,7 +261,7 @@ export default {
       this.setConfirmed('opponent', false)
       this.setConfirmed('user', false)
       this.showStart = false
-      this.readyBtn = { userReady: 'My Scramble is good!', userStarted: false, oppReady: 'Your Scramble is good!', oppStarted: false}
+      this.readyBtn = { userReady: 'My Scramble is good!', userStarted: false, oppReady: 'Your Scramble is good!', oppStarted: false }
       this.scramble = { moves: '', confirmed: false, oppScramble: 'red', myScramble: 'primary' }
       this.$refs.scrambleRow.style.display = 'none'
       this.$refs.oppStopwatch.style.display = 'none'
