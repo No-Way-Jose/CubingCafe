@@ -22,6 +22,10 @@ UserSchema.methods.validatePassword = function (pass) {
   return generateHash(pass, this.salt) === this.hash;
 };
 
+UserSchema.statics.getNumOfUsers = function () {
+  return this.count({});
+};
+
 const UserModel = mongoose.model('User', UserSchema);
 
 module.exports = UserModel;

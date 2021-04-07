@@ -26,6 +26,17 @@ sessionSchema.statics.getSession = function (username) {
   return this.findOne({ user: username }, null, { sort: { createdAt: -1 } });
 };
 
+solveSchema.statics.getStats = function (username) {
+  return this.aggregate([
+    { $match: { user: username } },
+    { $group: { _id: "$size", slowest: { $max: "$time"}, fastest: { $min: "$time" }, avg: { $avg: "$time" }, count: { $sum: 1 } } },
+    { $sort: { count: -1 } }]);
+};
+
+solveSchema.statics.solveCount = function (username) {
+  return this.count({ user: username })
+};
+
 const SolveModel = mongoose.model('Solve', solveSchema);
 const SessionModel = mongoose.model('Session', sessionSchema);
 

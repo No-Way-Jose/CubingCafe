@@ -4,17 +4,15 @@
                 top right transition="slide-y-transition">{{ snackMessage.message }}
     </v-snackbar>
     <v-col>
-      <v-row>
-        <v-select :items="items" label="Select different leaderboard ..."></v-select>
-      </v-row>
-      <v-data-table :headers="headers" :items="leaderboard" class="pt-12">
+      <v-row><h1>Global Rankings</h1><v-icon x-large color="warning" class="ml-4">mdi-trophy</v-icon></v-row>
+      <v-data-table :headers="headers" :items="leaders.leaderboard" class="pt-12"
+                    @update:options="updateBoard" :server-items-length="leaders.max" :loading="leaders.loading">
         <template v-slot:header.name="{ header }">
           {{ header.text.toUpperCase() }}
         </template>
       </v-data-table>
     </v-col>
   </v-container>
-
 </template>
 
 <script>
@@ -22,23 +20,25 @@ export default {
   name: 'Leaderboard',
   data: () => ({
     snackMessage: { activate: false, message: null, timeout: 5000 },
-    items: ['2 * 2', '3 * 3', '4 * 4', '5 * 5'],
+    leaders: { max: 0, loading: true, leaderboard: [] },
     headers: [
       { text: 'Rank', align: 'start', value: 'rank' },
       { text: 'Username', value: '_id' },
       { text: 'Elo', value: 'elo' },
       { text: 'Wins', value: 'wins' },
       { text: 'Losses', value: 'losses' }
-    ],
-    leaderboard: []
+    ]
   }),
   mounted () {
-    this.getLeaders()
+    this.updateBoard()
   },
   methods: {
-    async getLeaders () {
-      let rank = 1
-      const q = { query: 'query usermany { userMany(sort: ELO_DESC) { _id, elo, wins, losses, updatedAt } }', operationName: 'usermany' }
+    updateBoard (info) {
+      this.leaders.loading = true
+      this.getUserCount(info)
+    },
+    async getUserCount (info) {
+      const q = { query: 'query users { userCount { max} }', operationName: 'users' }
       fetch('/graphql', {
         method: 'post',
         headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
@@ -46,11 +46,33 @@ export default {
       }).then((response) => response.json())
         .then((graphQlRes) => {
           if (graphQlRes.data) {
+            this.leaders.max = graphQlRes.data.userCount.max
+            this.getLeaders(info.page, info.itemsPerPage)
+          } else {
+            this.showSnack(graphQlRes.errors[0].message)
+          }
+        })
+        .catch((err) => console.log(err))
+    },
+    async getLeaders (page, limit) {
+      let rank = 1 + ((page-1) * limit)
+      const q = { query: 'query usermany ($skip: Int, $limit: Int) { userMany(sort: ELO_DESC, limit: $limit, skip: $skip) { _id, elo, wins, losses, updatedAt } }',
+        variables: { skip: ((page-1) * limit), limit: limit },
+        operationName: 'usermany' }
+      fetch('/graphql', {
+        method: 'post',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(q)
+      }).then((response) => response.json())
+        .then((graphQlRes) => {
+          if (graphQlRes.data) {
+            this.leaders.leaderboard = []
             for (let entry in graphQlRes.data.userMany) {
               let record = graphQlRes.data.userMany[entry]
               record.rank = rank++
-              this.leaderboard.push(record)
+              this.leaders.leaderboard.push(record)
             }
+            this.leaders.loading = false
           } else {
             this.showSnack(graphQlRes.errors[0].message)
           }
@@ -68,7 +90,7 @@ export default {
 <style scoped>
   .leaderContainer {
     max-width: 1400px;
-    padding: 20px 50px 0 50px;
+    padding: 50px;
   }
   .snackMessage {
     margin-top: 85px;

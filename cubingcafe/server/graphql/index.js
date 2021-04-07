@@ -29,12 +29,15 @@ const setUserInFilter = async (resolve, source, args, context, info) => {
 schemaComposer.Query.addFields({
   userById: UserTC.getResolver('findById'),
   userMany: UserTC.getResolver('findMany'),
+  userCount: UserTC.getResolver('userCount'),
   sessionMany: SessionTC.getResolver('findMany', [isAuthenticated, setUserInFilter]),
   solveMany: SolveTC.getResolver('findMany', [isAuthenticated, setUserInFilter]),
   getSession: SessionTC.getResolver('getSession', [isAuthenticated]),
   matchMany: MatchTC.getResolver('findMany', [isAuthenticated]),
   queueMany: QueueTC.getResolver('findMany', [isAuthenticated]),
-  userWinsOrLosses: MatchTC.getResolver('findUserWinsOrLosses', [isAuthenticated])
+  userWinsOrLosses: MatchTC.getResolver('findUserWinsOrLosses', [isAuthenticated]),
+  getStats: SolveTC.getResolver('getStats', [isAuthenticated]),
+  solveCount: SolveTC.getResolver('solveCount', [isAuthenticated])
 });
 
 schemaComposer.Mutation.addFields({

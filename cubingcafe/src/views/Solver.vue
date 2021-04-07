@@ -22,9 +22,8 @@
       <v-col cols="5" class="pr-12">
         <v-row><h1>Scramble Input</h1></v-row>
         <v-row class="pt-3 pr-6">
-          <p>Note: The given scramble may only contain the standard cube face notations [R, L, F, B , U, D].
-            Prime/counterclockwise moves as well as double rotations should be indicated using X' or X2 accordingly,
-            where where X is a valid cube face.
+          <p>The given scramble may only contain the standard cube face notations [R, L, F, B , U, D] separated by a space.
+             Prime / counterclockwise moves as well as double rotations should be indicated using X' or X2 respectfully.
           </p>
         </v-row>
         <v-row class="pt-2 pr-2">
@@ -41,7 +40,7 @@
         <v-row><h1>Options</h1></v-row>
         <v-row class="pt-3 pl-2">
           <v-btn @click="performScramble()" color="warning" class="mr-5">View Scramble</v-btn>
-          <v-btn @click="solve()" color="info" class="mr-5" v-scroll-to="scrollTo('solution')">Solve!</v-btn>
+          <v-btn @click="solve()" color="info" class="mr-5" v-bind:disabled="disableSolve" v-scroll-to="scrollTo('solution')">Solve!</v-btn>
           <v-btn @click="reset()" color="error">Reset</v-btn>
         </v-row>
 
@@ -132,6 +131,7 @@ export default {
   data: () => ({
     selectedColour: 'redBlock',
     notSolved: true,
+    disableSolve: false,
     colours: {
       6: { class: 'greenBlock', limit: 9, idx: 0 },
       7: { class: 'redBlock', limit: 9, idx: 1 },
@@ -216,7 +216,6 @@ export default {
         const block = String(face) + '-' + String(positionsToMove[firstFace][i])
         this.$refs[block][0].className = currFaceColours[i]
       }
-
     },
     performScramble () {
       this.reset()
@@ -240,16 +239,19 @@ export default {
       } else {
         this.showSnack('INFO: No scramble string was passed in!', 'info')
       }
-
     },
     changeColour (block) {
       const oldKey = Object.keys(this.colours).find(key => this.colours[key].class === this.$refs[block][0].className.substring(6))
       const newKey = Object.keys(this.colours).find(key => this.colours[key].class === this.selectedColour)
       this.colours[oldKey].limit -= 1
       this.colours[newKey].limit += 1
-      if (this.colours[newKey].limit > 9) this.showSnack('WARNING: You\'ve added an invalid number of ' + this.selectedColour.replace('Block', '') + ' blocks!', 'warning')
+      if (Object.values(this.colours).find(entry => entry.limit > 9)) {
+        this.disableSolve = true
+        this.showSnack('WARNING: You\'ve added an invalid number of ' + this.selectedColour.replace('Block', '') + ' blocks!', 'warning')
+      } else {
+        this.disableSolve = false
+      }
       this.$refs[block][0].className = 'block ' + this.selectedColour
-
     },
     showSnack (message, colour) {
       this.snackMessage.colour = colour
@@ -305,9 +307,8 @@ export default {
         this.instructions = Object.values(solution)
         this.notSolved = false
         this.generatePreview(this.currentState.sol.trim())
-        console.log(solution, this.currentState.sol)
       } catch (err) {
-        this.showSnack('ERROR: ' + err.message, 'error')
+        this.showSnack('ERROR: Could not solve. Double check your input!', 'error')
       }
     },
     convertAlg (theString, mapping) {
