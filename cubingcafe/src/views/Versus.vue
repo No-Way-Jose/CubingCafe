@@ -99,7 +99,7 @@ export default {
   },
   beforeRouteEnter (to, from, next) {
     next(vm => {
-      if (!vm.$store.state.user.isLoggedIn) {
+      if (!vm.$store.state.user.loggedIn) {
         next('/login')
       } else {
         next()
@@ -264,8 +264,8 @@ export default {
       this.startOnRelease = false
       this.solveComplete = false
       this.matchDetails = {}
-      this.timer.reset()
-      this.opponentTimer.reset()
+      if (this.timer) { this.timer.reset() }
+      if (this.opponentTimer) { this.opponentTimer.reset() }
       this.setReady('opponent', false)
       this.setReady('user', false)
       this.setConfirmed('opponent', false)
