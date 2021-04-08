@@ -34,7 +34,7 @@
               <v-btn v-on="on" rounded elevation="0" color="transparent"><v-icon class="mr-3" color="#1791e8">mdi-cube-outline</v-icon>{{ selectedSize.title }}</v-btn>
             </template>
             <v-list>
-              <v-list-item v-for="item in size" :key="item.val" @click="getScramble(item.val)">
+              <v-list-item v-for="item in size" :key="item.val" @click="getScramble(item)">
                 <v-list-item-title class="centreTxt">{{ item.title }}</v-list-item-title>
               </v-list-item>
             </v-list>
@@ -198,7 +198,7 @@ export default {
         .catch((err) => console.log(err))
     },
     async saveTime(time) {
-      const size = '_' + this.selectedSize.charAt(0) + 'x' + this.selectedSize.charAt(0)
+      const size = '_' + this.selectedSize.val.charAt(0) + 'x' + this.selectedSize.val.charAt(0)
       const timeObj = {
         query: 'mutation insertsolve ($time: Float!, $session: MongoID!, $size: EnumSolveSize) { ' +
           'insertSolve(record: {time: $time, session: $session, size: $size }) ' +
@@ -269,7 +269,8 @@ export default {
       }
     },
     getScramble (cubeSize) {
-      if (cubeSize) this.selectedSize.val = cubeSize
+      if (cubeSize) this.selectedSize.val = cubeSize.val
+      this.selectedSize.Title = cubeSize.Title
       const scrambler = scramby(this.selectedSize.val)
       const state = scrambler.getRandomScramble()
       this.scramble = state.scrambleString
