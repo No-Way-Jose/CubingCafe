@@ -244,7 +244,7 @@ export default {
         api.findMatch()
       }
     },
-    disconnect () {
+    disconnect (rejoin = true) {
       api.disconnect()
       this.waiting = true
       if (this.$refs.loading) this.$refs.loading.style.display = 'flex'
@@ -266,7 +266,7 @@ export default {
       this.$refs.scrambleRow.style.display = 'none'
       this.$refs.oppStopwatch.style.display = 'none'
       this.$refs.userStopwatch.style.display = 'none'
-      if (this.discBtnTxt !== 'Disconnect') {
+      if (rejoin && this.discBtnTxt !== 'Disconnect') {
         this.discBtnTxt = 'Disconnect'
         this.connect()
       }
@@ -285,12 +285,11 @@ export default {
           this.opponentVideo.srcObject = obj.data.stream
           this.opponentVideo.autoplay = true
           this.opponentVideo.style = 'width: 100%; height: 40vh; object-fit: cover; border-radius: 10px;'
-          this.$refs.oppVideo.append(this.opponentVideo)
           break
         case 2: // disconnected from an opponent
           console.log('Opponent DISCONNECTED removing video stream')
           if (this.opponentVideo) this.opponentVideo.remove()
-          this.disconnect()
+          this.disconnect(false)
           break
         case 4: // user interaction
           switch (obj.data.action) {
