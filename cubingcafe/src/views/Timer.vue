@@ -31,7 +31,7 @@
         <v-col class="alignRight">
           <v-menu transition="slide-y-transition" :offset-y="true" bottom>
             <template v-slot:activator="{ on }">
-              <v-btn v-on="on" rounded elevation="0" color="transparent"><v-icon class="mr-3" color="#1791e8">mdi-cube-outline</v-icon>Size</v-btn>
+              <v-btn v-on="on" rounded elevation="0" color="transparent"><v-icon class="mr-3" color="#1791e8">mdi-cube-outline</v-icon>{{ selectedSize.title }}</v-btn>
             </template>
             <v-list>
               <v-list-item v-for="item in size" :key="item.val" @click="getScramble(item.val)">
@@ -92,7 +92,7 @@ export default {
     actionEvent: true,
     duration: 3600,
     mobile: isMobile,
-    selectedSize: '333',
+    selectedSize: { title: '3 x 3', val: '333' },
     size: [{ title: '2 x 2', val: '222' }, { title: '3 x 3', val: '333' }, { title: '4 x 4', val: '444' },
       { title: '5 x 5', val: '555' }, { title: '6 x 6', val: '666' }, { title: '7 x 7', val: '777' }],
     scramble: '',
@@ -269,8 +269,8 @@ export default {
       }
     },
     getScramble (cubeSize) {
-      if (cubeSize) this.selectedSize = cubeSize
-      const scrambler = scramby(this.selectedSize)
+      if (cubeSize) this.selectedSize.val = cubeSize
+      const scrambler = scramby(this.selectedSize.val)
       const state = scrambler.getRandomScramble()
       this.scramble = state.scrambleString
       scrambler.drawScramble(this.$refs.scrambleImage, state.state, 500, 250)
