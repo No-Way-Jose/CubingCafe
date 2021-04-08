@@ -127,8 +127,8 @@ module.exports = (io) => {
             }
             UserModel.updateOne({ _id: match[det.win] }, { $inc: { elo: match[`${det.win}Win`], wins: 1 } }).exec();
             UserModel.updateOne({ _id: match[det.lose] }, { $inc: { elo: -match[`${det.win}Win`], losses: 1 } }).exec();
-            if (cb) cb();
           }
+          if (cb) cb();
         });
       });
     };
