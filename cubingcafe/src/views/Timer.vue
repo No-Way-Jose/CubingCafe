@@ -97,7 +97,7 @@ export default {
       { title: '5 x 5', val: '555' }, { title: '6 x 6', val: '666' }, { title: '7 x 7', val: '777' }],
     scramble: '',
     timerData: { sessionID: '', history: [], best: 0, avg5: 0, avg12: 0 },
-    snackMessage: { activate: false, message: null, timeout: 5000 },
+    snackMessage: { activate: false, message: null, timeout: 5000 }
   }),
   created () {
     window.addEventListener('keydown', this.toggleClock)
@@ -142,7 +142,7 @@ export default {
       const mins = time % 60
       return pad(mins) + ':' + pad(secs) + '.' + pad(ms, 3)
     },
-    async newSession() {
+    async newSession () {
       const q = { query: 'mutation createsession { createSession { _id } }', operationName: 'createsession' }
       fetch('/graphql', {
         method: 'post',
@@ -177,9 +177,11 @@ export default {
         .catch((err) => console.log(err))
     },
     async getLastSolves () {
-      const q = { query: 'query solvemany ($session: MongoID) { solveMany(filter: { session: $session })  { time } }',
+      const q = {
+        query: 'query solvemany ($session: MongoID) { solveMany(filter: { session: $session })  { time } }',
         variables: { session: this.timerData.sessionID },
-        operationName: 'solvemany' }
+        operationName: 'solvemany'
+      }
       fetch('/graphql', {
         method: 'post',
         headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
@@ -197,7 +199,7 @@ export default {
         })
         .catch((err) => console.log(err))
     },
-    async saveTime(time) {
+    async saveTime (time) {
       const size = '_' + this.selectedSize.val.charAt(0) + 'x' + this.selectedSize.val.charAt(0)
       const timeObj = {
         query: 'mutation insertsolve ($time: Float!, $session: MongoID!, $size: EnumSolveSize) { ' +
@@ -270,7 +272,7 @@ export default {
     },
     getScramble (cubeSize) {
       if (cubeSize) this.selectedSize.val = cubeSize.val
-      this.selectedSize.Title = cubeSize.Title
+      this.selectedSize.title = cubeSize.title
       const scrambler = scramby(this.selectedSize.val)
       const state = scrambler.getRandomScramble()
       this.scramble = state.scrambleString
