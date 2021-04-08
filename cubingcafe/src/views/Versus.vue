@@ -285,6 +285,7 @@ export default {
           this.opponentVideo.srcObject = obj.data.stream
           this.opponentVideo.autoplay = true
           this.opponentVideo.style = 'width: 100%; height: 40vh; object-fit: cover; border-radius: 10px;'
+          this.$refs.oppVideo.append(this.opponentVideo)
           break
         case 2: // disconnected from an opponent
           console.log('Opponent DISCONNECTED removing video stream')
