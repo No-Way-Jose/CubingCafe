@@ -44,7 +44,7 @@ const api = (function () {
           localStream = stream
           console.log(localStreamListeners)
           notifyLocalStreamListeners()
-          //cb(localStream)
+          // cb(localStream)
         })
         .catch((e) => {
           console.log(e.name, e.message)
@@ -231,7 +231,7 @@ const api = (function () {
   module.disconnect = () => {
     dataConnections.forEach(conn => conn.open ? conn.close() : null)
     videoConnections.forEach(conn => conn.open ? conn.close() : null)
-    if (queueSocket.connected) {
+    if (queueSocket && queueSocket.connected) {
       queueSocket.disconnect()
       notifyMatchListeners({ action: 5 })
     }
