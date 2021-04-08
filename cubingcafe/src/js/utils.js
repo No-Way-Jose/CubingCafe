@@ -38,6 +38,7 @@ const utils = (function () {
     }
 
     function reset () {
+      stop()
       clock = 0
       render()
     }

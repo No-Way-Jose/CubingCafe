@@ -98,7 +98,8 @@ export default {
     this.matchSetup()
   },
   beforeRouteLeave (to, from, next) {
-    this.disconnect()
+    this.disconnect(false)
+    this.initialConnection = true
     api.stopCamera()
     next()
   },
@@ -266,6 +267,7 @@ export default {
       this.$refs.scrambleRow.style.display = 'none'
       this.$refs.oppStopwatch.style.display = 'none'
       this.$refs.userStopwatch.style.display = 'none'
+      this.keysPressed = {}
       if (rejoin && this.discBtnTxt !== 'Disconnect') {
         this.discBtnTxt = 'Disconnect'
         this.connect()

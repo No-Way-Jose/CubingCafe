@@ -85,7 +85,7 @@ const api = (function () {
     }
   }
 
-  const queueListeners = []
+  let queueListeners = []
 
   const notifyMatchListeners = (data) => {
     queueListeners.forEach(listener => listener(data))
@@ -241,11 +241,12 @@ const api = (function () {
   }
 
   module.stopCamera = () => {
-    localStream.getTracks().forEach(track => track.stop())
+    if (localStream) localStream.getTracks().forEach(track => track.stop())
     dataConnections = []
     videoConnections = []
     localStreamListeners = []
     localStream = null
+    queueListeners = []
   }
 
   module.signin = function (username, password) {
