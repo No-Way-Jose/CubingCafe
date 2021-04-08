@@ -97,6 +97,15 @@ export default {
   ready () {
     this.matchSetup()
   },
+  beforeRouteEnter (to, from, next) {
+    next(vm => {
+      if (!vm.$store.state.user.isLoggedIn) {
+        next('/login')
+      } else {
+        next()
+      }
+    })
+  },
   beforeRouteLeave (to, from, next) {
     this.disconnect(false)
     this.initialConnection = true
@@ -292,6 +301,7 @@ export default {
         case 2: // disconnected from an opponent
           console.log('Opponent DISCONNECTED removing video stream')
           if (this.opponentVideo) this.opponentVideo.remove()
+          this.discBtnTxt = 'Disconnect'
           this.disconnect(false)
           break
         case 4: // user interaction
