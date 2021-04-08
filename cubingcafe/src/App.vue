@@ -24,10 +24,9 @@
       </v-container>
       <v-footer class="font-weight-medium pa-0" style="justify-content: center" elevation="9" color="#1791e8">
         <v-row class="footerBar ma-0">
-          <v-row class="ma-0">
-            <v-col class="footerText">
-              <strong>Copyright © {{ new Date().getFullYear() }}  CubingCafe. All rights reserved.</strong>
-            </v-col>
+          <v-row class="ma-1" justify="center">
+            <strong class="pt-3 footerText">Copyright © {{ new Date().getFullYear() }}  CubingCafe. All rights reserved.</strong>
+            <p class="pt-3 ml-2 footerText creditsLink" v-on:click="$router.push('/credits')">Credits</p>
           </v-row>
         </v-row>
       </v-footer>
@@ -103,6 +102,11 @@ export default {
   .footerText {
     text-align: center;
     color: white;
+  }
+  .creditsLink {
+    cursor: pointer;
+    text-decoration: underline;
+    font-weight: bold;
   }
   .router-link-active{
     border-bottom: 2px solid #1791e8;

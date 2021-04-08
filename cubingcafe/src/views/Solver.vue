@@ -61,7 +61,7 @@
     </v-row>
 
     <v-row class="pt-6" v-bind:class="{ hidden: notSolved }"><h1>Solution</h1></v-row>
-    <v-row class="pb-6" v-bind:class="{ hidden: notSolved }"><h3>* Start with green facing you and white on the bottom</h3></v-row>
+    <v-row class="pb-6" v-bind:class="{ hidden: notSolved }"><h3 class="subHead">Start with green facing you and white on the bottom</h3></v-row>
     <v-row ref="cubeImg" v-bind:class="{ hidden: notSolved }"></v-row>
     <v-row v-bind:class="{ hidden: notSolved }">
       <v-col cols="8">
@@ -390,6 +390,9 @@ export default {
   }
   .stepHeader {
     color: #0275d8;
+  }
+  .subHead {
+    color: rgba(0, 0, 0, 0.6);
   }
   .steps {
     font-size: 1.5vw;
