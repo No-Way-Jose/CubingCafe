@@ -1,4 +1,5 @@
 const { schemaComposer } = require('graphql-compose');
+const validator = require('validator');
 
 require('./completed');
 const { UserTC } = require('../user');
@@ -26,6 +27,24 @@ const setUserInFilter = async (resolve, source, args, context, info) => {
   return resolve(source, args, context, info);
 };
 
+const validateUserStrings = async (resolve, source, args, context, info) => {
+  let { username, password } = args;
+
+  username = validator.trim(username);
+  username = validator.escape(username);
+  if (!validator.isLength(username, { min: 1, max: 30 })) {
+    return Promise.reject(new Error('Error: Username is not between 1 and 30 characters.'));
+  }
+
+  if (!validator.isLength(password, { min: 8 })) {
+    return Promise.reject(new Error('Error: Password is too short.'));
+  }
+
+  Object.assign(args, { username });
+
+  return resolve(source, args, context, info);
+};
+
 schemaComposer.Query.addFields({
   userById: UserTC.getResolver('findById'),
   userMany: UserTC.getResolver('findMany'),
@@ -41,8 +60,8 @@ schemaComposer.Query.addFields({
 });
 
 schemaComposer.Mutation.addFields({
-  signIn: UserTC.getResolver('signIn'),
-  signUp: UserTC.getResolver('signUp'),
+  signIn: UserTC.getResolver('signIn', [validateUserStrings]),
+  signUp: UserTC.getResolver('signUp', [validateUserStrings]),
   signOut: UserTC.getResolver('signOut'),
   createSession: SessionTC.getResolver('createSession', [isAuthenticated]),
   insertSolve: SolveTC.getResolver('createOne', [isAuthenticated]).wrapResolve(next => rp => {

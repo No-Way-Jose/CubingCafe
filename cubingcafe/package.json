@@ -33,6 +33,7 @@
     "socket.io-client": "^4.0.0",
     "sr-visualizer": "^1.0.8",
     "v-aspect-ratio": "^2.0.1",
+    "validator": "^13.5.2",
     "vee-validate": "^3.4.5",
     "vue": "^2.6.11",
     "vue-google-charts": "^0.3.3",
