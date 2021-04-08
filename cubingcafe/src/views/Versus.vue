@@ -85,6 +85,7 @@ export default {
     solveComplete: false,
     matchDetails: {},
     opponentVideo: null,
+    leaving: false,
     rules: [
       '• No Profanity',
       '• Click Find Match to find an opponent',
@@ -108,7 +109,7 @@ export default {
   },
   beforeRouteLeave (to, from, next) {
     this.disconnect(false)
-    this.initialConnection = true
+    this.leaving = true
     api.stopCamera()
     next()
   },
@@ -125,6 +126,7 @@ export default {
   },
   methods: {
     matchSetup () {
+      if (this.leaving) return
       console.log(this.$refs.localVideo)
       console.log('setup', this.localStreamUpdate)
       this.timer = new utils.Stopwatch(this.$refs.userStopwatch)
