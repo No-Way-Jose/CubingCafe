@@ -23,10 +23,8 @@ const sessionMiddleware = session({
   secret: 'heh super duper secret',
   resave: false,
   saveUninitialized: true,
-  cookie: { httpOnly: true, secure: true, sameSite: true, path: '/', }
+  cookie: { httpOnly: true, secure: true, sameSite: true, path: '/' }
 });
-
-const connectedUsers = [];
 
 // Create server
 const app = express();
@@ -41,7 +39,6 @@ if (!process.env.PORT) {
     cert: certificate
   };
   // for localhost b/c https is required for camera to work when connecting over LAN
-  console.log('here');
   server = https.createServer(config, app).listen(8080, (err) => {
     if (err) console.log(err);
     else console.log('HTTPS server on https://localhost:%s', 8080);
@@ -72,7 +69,13 @@ app.use(function (req, res, next) {
 app.use('/', serveStatic(path.join(__dirname, '/dist')));
 
 app.use(function (req, res, next) {
-  console.log('HTTP request', req.method, req.url, req.body);
+  const sensitiveTerms = ['signIn', 'signUp'];
+  let sensitive = false;
+  if (req.body.query) {
+    sensitive = sensitiveTerms.some(term => req.body.query.includes(term));
+  }
+  if (!sensitive) console.log('HTTP request', req.method, req.url, req.body);
+  else console.log('HTTP request', req.method, req.url, 'Attempting signIn or signUp');
   next();
 });
 
@@ -94,22 +97,8 @@ const io = socketio(server);
 io.use((socket, next) => sessionMiddleware(socket.request, socket.request.res || {}, next));
 
 require('./socket.js')(io);
-// require('./socket.js')(io, mongodb, dbname);
 
 const peerServer = ExpressPeerServer(server, peerOptions.path);
-
-peerServer.on('connection', (client) => {
-  // connectedUsers.push(client);
-  console.log('Connected: ' + client.getId());
-});
-
-peerServer.on('disconnect', (client) => {
-  console.log(client.getId());
-  const clientId = client.getId();
-  const i = connectedUsers.findIndex((id) => id === clientId);
-  if (i !== -1) connectedUsers.splice(i, 1);
-  console.log(`'client ${client} disconnected.'`);
-});
 
 app.use(peerOptions.path, peerServer);
 

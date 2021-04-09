@@ -9,9 +9,7 @@ module.exports = (io) => {
   };
 
   io.on('connection', (socket) => {
-    console.log(socket.request.session);
     console.log('CONNECTION');
-    // console.log(socket.request.session);
     if (!socket.request.session.username) return socket.disconnect(true);
     const username = socket.request.session.username;
 
@@ -31,8 +29,13 @@ module.exports = (io) => {
         console.log(match);
         if (err || !match) return;
         let currUser = ''; let otherUser = '';
-        if (username === match.user1) currUser = 'user1', otherUser = 'user2';
-        else if (username === match.user2) currUser = 'user2', otherUser = 'user1';
+        if (username === match.user1) {
+          currUser = 'user1';
+          otherUser = 'user2';
+        } else if (username === match.user2) {
+          currUser = 'user2';
+          otherUser = 'user1';
+        }
         // forfeit the match
         updateMatchTimes(match._id.toString(), currUser, Number.MAX_SAFE_INTEGER, () => {
           updateMatchTimes(match._id.toString(), otherUser, -1);
@@ -48,8 +51,6 @@ module.exports = (io) => {
         if (result) {
           console.log(`${username} joining ${matchId} room for future emits`);
           socket.join(matchId);
-          console.log(io.sockets.adapter.rooms.get(matchId));
-          console.log(typeof matchId);
         }
       });
     });
@@ -116,15 +117,15 @@ module.exports = (io) => {
         MatchModel.findOne({ _id: idObj }, null, null, (err, match) => {
           if (err) return socket.emit('MatchUpdateError', 'Internal server error');
           if (match.user1Time && match.user2Time) {
-            console.log('MATCH COMPLETE');
+            console.log(`MATCH ${matchId} COMPLETE`);
             let det = match.user1Time < match.user2Time ? { win: 'user1', lose: 'user2' } : null;
             if (!det) det = match.user1Time > match.user2Time ? { win: 'user2', lose: 'user1' } : null;
-            if (!det) return;
             io.to(matchId).emit('match:completed', match);
-            // console.log(io.in(matchId).adapter.nsp.sockets.sockets)
+            // eslint-disable-next-line no-unused-vars
             for (const [_, s] of io.in(matchId).adapter.nsp.sockets) {
               s.leave(matchId);
             }
+            if (!det) return;
             UserModel.updateOne({ _id: match[det.win] }, { $inc: { elo: match[`${det.win}Win`], wins: 1 } }).exec();
             UserModel.updateOne({ _id: match[det.lose] }, { $inc: { elo: -match[`${det.win}Win`], losses: 1 } }).exec();
           }
@@ -135,7 +136,6 @@ module.exports = (io) => {
 
     socket.on('matchEnd', (data) => {
       console.log('match ended');
-      console.log(data);
       MatchModel.findOne({ _id: new ObjectId(data._id) }, {}, (err, match) => {
         if (err) return queueError(socket);
         if (match) {
