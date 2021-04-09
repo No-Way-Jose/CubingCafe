@@ -44,7 +44,7 @@ const signUp = {
         if (user) { reject(new Error('Username already taken.')); }
         const salt = generateSalt();
         const hash = generateHash(password, salt);
-        return UserModel({ _id: username, salt, hash, elo: 750, wins: 3, losses: 0 }).save();
+        return UserModel({ _id: username, salt, hash, elo: 750, wins: 0, losses: 0 }).save();
       }).then(function (result) {
         session.username = result._id;
         res.setHeader('Set-Cookie', cookie.serialize('username', result._id, {
