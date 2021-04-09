@@ -29,7 +29,22 @@
     </v-row>
     <v-row class="pt-12">
       <v-col cols="7">
-        <v-row><h1>Solve History</h1></v-row>
+        <v-row>
+          <h1>Solve History</h1>
+          <v-menu transition="slide-y-transition" :offset-y="true" bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn v-on="on" rounded elevation="0" class="ml-3 mt-2" color="transparent">
+                <v-icon class="mr-3" color="#1791e8">mdi-cube-outline</v-icon>
+                {{ selectedSize.title }}
+              </v-btn>
+            </template>
+            <v-list>
+              <v-list-item v-for="item in size" :key="item.val" @click="cubeSizeFilter(item)">
+                <v-list-item-title class="centreTxt">{{ item.title }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+        </v-row>
       </v-col>
       <v-col cols="5">
         <h1>Cube Demographic</h1>
@@ -39,7 +54,6 @@
       <v-col cols="7">
         <v-data-table :headers="headers" :items="solves.history" :loading="solves.loading"
                       @update:options="updateHistory" :server-items-length="solves.max">
-          <template v-slot:header.name="{ header }">{{ header.text.toUpperCase() }}</template>
         </v-data-table>
       </v-col>
       <v-col cols="5">
@@ -62,7 +76,11 @@ export default {
       { text: 'Date', value: 'updatedAt' }
     ],
     solves: { max: 0, loading: true, order: 'UPDATEDAT_DESC', history: [] },
-    userStats: { fav: '3 x 3', avg: 0, best: 0, worst: 0 }
+    userStats: { fav: '3 x 3', avg: 0, best: 0, worst: 0 },
+    selectedSize: { title: 'All sizes', val: '' },
+    size: [{ title: 'All sizes', val: '' }, { title: '2 x 2', val: '_2x2' }, { title: '3 x 3', val: '_3x3' }, { title: '4 x 4', val: '_4x4' },
+      { title: '5 x 5', val: '_5x5' }, { title: '6 x 6', val: '_6x6' }, { title: '7 x 7', val: '_7x7' }],
+    sortAndPageInfo: {}
   }),
   beforeRouteEnter (to, from, next) {
     next(vm => {
@@ -70,6 +88,10 @@ export default {
     })
   },
   methods: {
+    cubeSizeFilter (sizeObj) {
+      this.selectedSize = sizeObj
+      this.getSolveCount()
+    },
     updateHistory (e) {
       this.solves.loading = true
       let order = false
@@ -78,10 +100,17 @@ export default {
         order = e.sortBy[0].toUpperCase() + dir
       }
       if (order && (order !== this.solves.order)) this.solves.order = order
-      this.getSolveCount(e)
+      this.sortAndPageInfo = e
+      this.getSolveCount()
     },
-    async getSolveCount (info) {
-      const q = { query: 'query solves { solveCount { solves } }', operationName: 'solves' }
+    async getSolveCount () {
+      const filter = {}
+      if (this.selectedSize.val) filter.size = this.selectedSize.val
+      const q = {
+        query: 'query solves ($filter: FilterCountSolveInput) { solveCount (filter: $filter) }',
+        operationName: 'solves',
+        variables: { filter }
+      }
       fetch('/graphql', {
         method: 'post',
         headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
@@ -89,20 +118,20 @@ export default {
       }).then((response) => response.json())
         .then((graphQlRes) => {
           if (graphQlRes.data) {
-            this.solves.max = graphQlRes.data.solveCount.solves
-            this.getSolveHistory(info.page, info.itemsPerPage)
+            this.solves.max = graphQlRes.data.solveCount
+            this.getSolveHistory(this.sortAndPageInfo.page, this.sortAndPageInfo.itemsPerPage, filter)
           } else {
             this.showSnack(graphQlRes.errors[0].message)
           }
         })
         .catch((err) => console.error(err))
     },
-    async getSolveHistory (page, limit) {
+    async getSolveHistory (page, limit, filter) {
       let id = 1 + ((page - 1) * limit)
       const q = {
-        query: 'query solvemany ($skip: Int, $limit: Int, $sort: SortFindManySolveInput) { ' +
-          'solveMany(sort: $sort, limit: $limit, skip: $skip) { time, size, updatedAt } }',
-        variables: { sort: this.solves.order, skip: ((page - 1) * limit), limit: limit },
+        query: 'query solvemany ($filter: FilterFindManySolveInput, $skip: Int, $limit: Int, $sort: SortFindManySolveInput) { ' +
+          'solveMany(sort: $sort, limit: $limit, skip: $skip, filter: $filter) { time, size, updatedAt } }',
+        variables: { sort: this.solves.order, skip: ((page - 1) * limit), limit: limit, filter },
         operationName: 'solvemany'
       }
       fetch('/graphql', {
