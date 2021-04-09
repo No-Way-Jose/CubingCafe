@@ -55,7 +55,7 @@ export default {
             this.showSnack(graphQlRes.errors[0].message)
           }
         })
-        .catch((err) => console.log(err))
+        .catch((err) => console.error(err))
     },
     async getLeaders (page, limit) {
       let rank = 1 + ((page - 1) * limit)
@@ -83,7 +83,7 @@ export default {
             this.showSnack(graphQlRes.errors[0].message)
           }
         })
-        .catch((err) => console.log(err))
+        .catch((err) => console.error(err))
     },
     showSnack (message) {
       this.snackMessage.message = message

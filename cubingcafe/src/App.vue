@@ -52,7 +52,6 @@ export default {
   }),
   mounted () {
     const username = document.cookie.replace(/(?:(?:^|.*;\s*)username\s*=\s*([^;]*).*$)|^.*$/, '$1')
-    console.log(username)
     if (username) this.$store.commit('setUserState', username)
   },
   methods: {
@@ -64,7 +63,6 @@ export default {
         body: JSON.stringify(q)
       }).then((response) => response.json())
         .then((graphQlRes) => {
-          console.log(graphQlRes)
           if (graphQlRes.data.signOut.completed) {
             this.$store.commit('setUserState', false)
             if (this.$route.name !== 'home') {
@@ -74,7 +72,7 @@ export default {
             }
           }
         })
-        .catch((err) => console.log(err))
+        .catch((err) => console.error(err))
     },
     executeOptions (option) {
       // Determine if navigating to new page or logging out
