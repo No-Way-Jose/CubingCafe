@@ -149,7 +149,7 @@ export default {
             this.$store.state.authError.message = graphQlRes.errors[0].message
           }
         })
-        .catch((err) => console.log(err))
+        .catch((err) => console.error(err))
     },
     showSnack (message) {
       this.snackMessage.message = message

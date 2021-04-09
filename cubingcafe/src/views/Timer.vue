@@ -61,6 +61,7 @@
         </v-tooltip>
       </v-row>
       <v-row v-if="mobile" justify="center"><v-btn class="toggleBtn" color="#1791e8" outlined rounded v-on:click="toggleClock()">Toggle</v-btn></v-row>
+      <v-row justify="center" class="instructions">Use spacebar to toggle. Enter to save & Backspace to delete</v-row>
       <v-row class="statsRow">
         <v-col class="statHeader">Best<span class="stats">{{ formatTime(timerData.best) }}</span></v-col>
         <v-col class="statHeader">AVG 5<span class="stats">{{ formatTime(timerData.avg5) }}</span></v-col>
@@ -157,7 +158,7 @@ export default {
             this.showSnack(graphQlRes.errors[0].message)
           }
         })
-        .catch((err) => console.log(err))
+        .catch((err) => console.error(err))
     },
     async getLastSession () {
       const q = { query: 'query getsession { getSession { _id } }', operationName: 'getsession' }
@@ -174,7 +175,7 @@ export default {
             this.showSnack(graphQlRes.errors[0].message)
           }
         })
-        .catch((err) => console.log(err))
+        .catch((err) => console.error(err))
     },
     async getLastSolves () {
       const q = {
@@ -197,7 +198,7 @@ export default {
             this.showSnack(graphQlRes.errors[0].message)
           }
         })
-        .catch((err) => console.log(err))
+        .catch((err) => console.error(err))
     },
     async saveTime (time) {
       const size = '_' + this.selectedSize.val.charAt(0) + 'x' + this.selectedSize.val.charAt(0)
@@ -221,7 +222,7 @@ export default {
             this.showSnack(graphQlRes.errors[0].message)
           }
         })
-        .catch((err) => console.log(err))
+        .catch((err) => console.error(err))
     },
     swapMode (mode) {
       this.mode = mode
@@ -271,12 +272,11 @@ export default {
       }
     },
     getScramble (cubeSize) {
-      if (cubeSize) this.selectedSize.val = cubeSize.val
-      this.selectedSize.title = cubeSize.title
+      if (cubeSize) this.selectedSize = cubeSize
       const scrambler = scramby(this.selectedSize.val)
       const state = scrambler.getRandomScramble()
       this.scramble = state.scrambleString
-      scrambler.drawScramble(this.$refs.scrambleImage, state.state, 500, 250)
+      scrambler.drawScramble(this.$refs.scrambleImage, state.state, 665, 275)
     },
     updateStats () {
       // Clear the stats
@@ -382,6 +382,14 @@ export default {
   }
   .snackMessage {
     margin-top: 85px;
+  }
+  .instructions {
+    color: #1791E8;
+    font-size: 1vw;
+    font-weight: bold;
+  }
+  .v-tooltip__content {
+    opacity: 1 !important;
   }
   .flash {
     color: red;

@@ -95,7 +95,7 @@ export default {
             this.showSnack(graphQlRes.errors[0].message)
           }
         })
-        .catch((err) => console.log(err))
+        .catch((err) => console.error(err))
     },
     async getSolveHistory (page, limit) {
       let id = 1 + ((page-1) * limit)
@@ -124,7 +124,7 @@ export default {
             this.showSnack(graphQlRes.errors[0].message, 'error')
           }
         })
-        .catch((err) => console.log(err))
+        .catch((err) => console.error(err))
     },
     async getUserStats () {
       const q = { query: 'query getstats { getStats { _id, slowest, fastest, avg, count } }', operationName: 'getstats' }
@@ -151,7 +151,7 @@ export default {
             this.showSnack(graphQlRes.errors[0].message, 'error')
           }
         })
-        .catch((err) => console.log(err))
+        .catch((err) => console.error(err))
     },
     msToTime (s) {
       function pad (n, z) {

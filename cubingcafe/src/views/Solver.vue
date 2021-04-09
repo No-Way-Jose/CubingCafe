@@ -27,7 +27,7 @@
           </p>
         </v-row>
         <v-row class="pt-2 pr-2">
-          <v-text-field v-model="scrambleInput" label="Enter scramble..."></v-text-field>
+          <v-text-field v-model="scrambleInput" label="Enter scramble..." hint="Example: R F U' D2 L R B R"></v-text-field>
         </v-row>
       </v-col>
       <v-col cols="7" class="pl-6">

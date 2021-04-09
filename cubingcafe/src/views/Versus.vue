@@ -1,5 +1,9 @@
 <template>
   <v-container class="versusContainer">
+    <!-- Snackbar template -->
+    <v-snackbar color="warning" class="snackMessage" v-model="snackMessage.activate" :timeout="snackMessage.timeout"
+                top right transition="slide-y-transition">{{ snackMessage.message }}
+    </v-snackbar>
     <v-col>
       <v-row ref=videoGrid>
         <v-col cols="6">
@@ -50,7 +54,7 @@
 
       <v-row class="py-8" justify="center">
         <v-btn ref="connect" @click="connect" v-if="waiting" color="primary">Find Match</v-btn>
-        <v-btn ref="disconnect" @click="disconnect" v-if="!waiting" color="red">{{ discBtnTxt }}</v-btn>
+        <v-btn ref="disconnect" @click="disconnect" v-if="!waiting" color="red" class="dcBtn">{{ discBtnTxt }}</v-btn>
       </v-row>
     </v-col>
 
@@ -73,6 +77,7 @@ export default {
     discBtnTxt: 'Disconnect',
     readyBtn: { userReady: 'My Scramble is good!', userStarted: false, oppReady: 'Your Scramble is good!', oppStarted: false },
     scramble: { moves: '', confirmed: false, oppScramble: 'error', myScramble: 'primary' },
+    snackMessage: { activate: false, message: null, timeout: 5000 },
     initialConnection: true,
     playerState: {},
     confirmed: false,
@@ -127,8 +132,6 @@ export default {
   methods: {
     matchSetup () {
       if (this.leaving) return
-      console.log(this.$refs.localVideo)
-      console.log('setup', this.localStreamUpdate)
       this.timer = new utils.Stopwatch(this.$refs.userStopwatch)
       this.opponentTimer = new utils.Stopwatch(this.$refs.oppStopwatch)
       this.currUser = this.$store.state.user.displayName
@@ -178,7 +181,6 @@ export default {
       }
     },
     fetchScramble (scramble) {
-      console.log(scramble)
       const scrambler = scramby()
       this.scramble.moves = scramble.scrambleString
       scrambler.drawScramble(this.$refs.scrambleImage, scramble.state, 500, 250)
@@ -288,10 +290,8 @@ export default {
       switch (obj.action) {
         case 0: // connected to queue
           this.queueSize = `Joined queue of size: ${obj.data.queueSize}`
-          console.log(`Joined queue of size ${obj.data.queueSize}`)
           break
         case 1: // connected to a match
-          console.log('Connected to match adding video stream')
           if (this.$refs.loading) this.$refs.loading.style.display = 'none'
           this.opponentVideo = document.createElement('video')
           this.opponentVideo.id = obj.data.id
@@ -301,9 +301,9 @@ export default {
           this.$refs.oppVideo.append(this.opponentVideo)
           break
         case 2: // disconnected from an opponent
-          console.log('Opponent DISCONNECTED removing video stream')
           if (this.opponentVideo) this.opponentVideo.remove()
           this.discBtnTxt = 'Disconnect'
+          this.showSnack('Alert: Opponent disconnected!')
           this.disconnect(false)
           break
         case 4: // user interaction
@@ -323,7 +323,6 @@ export default {
               this.opponentTimer.start()
               break
             case 'Solved':
-              console.log(`opponent solved ${obj.data.value}`)
               this.opponentTimer.stop()
               const localTime = this.opponentTimer.getSeconds()
               const trusted = obj.data.value >= localTime - 1.5 && obj.data.value <= localTime + 1.5
@@ -346,7 +345,6 @@ export default {
           if (this.$refs.loading) this.$refs.loading.style.display = 'flex'
           break
         case 6: // match completed, result received from server
-          console.log('match registered with server can do something here later')
           this.discBtnTxt = 'Go Again!'
           break
       }
@@ -355,6 +353,10 @@ export default {
       if (stream) {
         this.$refs.localVideo.srcObject = stream
       }
+    },
+    showSnack (message) {
+      this.snackMessage.message = message
+      this.snackMessage.activate = true
     }
   }
 }
@@ -394,6 +396,12 @@ export default {
   }
   .statBtn {
     min-width: 85px;
+  }
+  .dcBtn {
+    color: white;
+  }
+  .snackMessage {
+    margin-top: 85px;
   }
 
 </style>
