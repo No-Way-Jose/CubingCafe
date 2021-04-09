@@ -340,7 +340,7 @@ export default {
     overflow-y: auto;
   }
   .statsRow {
-    padding-top: 20vh;
+    padding-top: 22vh;
   }
   .alignRight {
     text-align: right;

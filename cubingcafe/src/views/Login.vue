@@ -50,7 +50,9 @@
               v-model="userCredentials.password" type="Password" required solo counter
             ></v-text-field>
           </ValidationProvider>
-          <v-row v-if="authError" style="color: crimson" class="pt-5">{{ $store.state.authError.message }}</v-row>
+          <v-alert v-if="authError" type="error" text dense outlined border="left" class="mt-5" icon="mdi-alert-outline">
+            {{ $store.state.authError.message }}
+          </v-alert>
           <v-row justify="center"><v-btn class="mt-6 mr-4 methodBtn" color="#1791e8" @click="submit">Sign Up</v-btn></v-row>
         </form>
         <a v-if="validate"></a>
@@ -115,7 +117,7 @@ export default {
       this.$store.commit('resetAuthError')
       this.userCredentials = { username: '', password: '' }
     },
-    async authChange(method) {
+    async authChange (method) {
       let queryObj = {}
       let changeType = ''
       if (method === 'login') {

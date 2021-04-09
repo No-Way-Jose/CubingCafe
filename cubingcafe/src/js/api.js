@@ -3,19 +3,6 @@ import io from 'socket.io-client'
 
 const api = (function () {
   'use strict'
-  function send (method, url, data, callback) {
-    const xhr = new XMLHttpRequest()
-    xhr.onload = function () {
-      if (xhr.status !== 200) callback('(' + xhr.status + ')' + xhr.responseText, null)
-      else callback(null, JSON.parse(xhr.responseText))
-    }
-    xhr.open(method, url, true)
-    if (!data) xhr.send()
-    else {
-      xhr.setRequestHeader('Content-Type', 'application/json')
-      xhr.send(JSON.stringify(data))
-    }
-  }
 
   const module = {}
 
@@ -33,28 +20,24 @@ const api = (function () {
   }
 
   const getLocalStream = (cb = () => {}) => {
-    console.log(localStream)
     if (localStream) {
       return cb(localStream)
     }
-    if (!navigator.mediaDevices) return console.log('Not on a secure HTTPS connection')
+    if (!navigator.mediaDevices) return console.error('Not on a secure HTTPS connection')
     if (navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices.getUserMedia({ audio: false, video: true })
         .then((stream) => {
           localStream = stream
-          console.log(localStreamListeners)
           notifyLocalStreamListeners()
           // cb(localStream)
         })
         .catch((e) => {
-          console.log(e.name, e.message)
           cb(localStream)
         })
     }
   }
 
   module.onLocalStreamUpdate = (listener) => {
-    console.log('streamUpdate', listener)
     localStreamListeners.push(listener)
     getLocalStream(() => {})
   }
@@ -145,7 +128,6 @@ const api = (function () {
 
       peer.on('error', (err) => {
         console.error(err)
-        console.log(err.type)
         // if in queue leave due to peer error
         if (queueSocket.connected) queueSocket.disconnect()
         // if we're already in a match, they're connected peer to peer
@@ -208,7 +190,6 @@ const api = (function () {
   }
 
   module.sendCfmScramble = () => {
-    console.log('Sending confirmed message')
     sendMessage({ action: 'Confirmed' })
   }
 
@@ -247,20 +228,6 @@ const api = (function () {
     localStreamListeners = []
     localStream = null
     queueListeners = []
-  }
-
-  module.signin = function (username, password) {
-    send('POST', '/signin/', { username, password }, function (err, res) {
-      if (err) return 'ERROR Occurred...'
-      return (res)
-    })
-  }
-
-  module.signup = function (username, password) {
-    send('POST', '/signup/', { username, password }, function (err, res) {
-      if (err) return 'ERROR Occurred...'
-      return (res)
-    })
   }
 
   return module

@@ -88,6 +88,8 @@ export default {
     opponentUsername: { timer: null },
     opponentTimer: null,
     solveComplete: false,
+    localTime: null,
+    trusted: null,
     matchDetails: {},
     opponentVideo: null,
     leaving: false,
@@ -303,7 +305,7 @@ export default {
         case 2: // disconnected from an opponent
           if (this.opponentVideo) this.opponentVideo.remove()
           this.discBtnTxt = 'Disconnect'
-          this.showSnack('Alert: Opponent disconnected!')
+          this.showSnack('ALERT: Opponent disconnected!')
           this.disconnect(false)
           break
         case 4: // user interaction
@@ -324,10 +326,10 @@ export default {
               break
             case 'Solved':
               this.opponentTimer.stop()
-              const localTime = this.opponentTimer.getSeconds()
-              const trusted = obj.data.value >= localTime - 1.5 && obj.data.value <= localTime + 1.5
+              this.localTime = this.opponentTimer.getSeconds()
+              this.trusted = obj.data.value >= this.localTime - 1.5 && obj.data.value <= this.localTime + 1.5
               this.$refs.oppStopwatch.children[0].innerHTML = obj.data.value
-              api.emitOpponentTime(this.matchDetails._id, trusted, obj.data.value)
+              api.emitOpponentTime(this.matchDetails._id, this.trusted, obj.data.value)
               break
             case 'Match':
               if (obj.data.match.user1 === this.currUser) {

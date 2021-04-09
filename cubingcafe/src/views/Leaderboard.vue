@@ -24,7 +24,7 @@ export default {
     headers: [
       { text: 'Rank', align: 'start', value: 'rank', sortable: false },
       { text: 'Username', value: '_id', sortable: false },
-      { text: 'Elo', value: 'elo'},
+      { text: 'Elo', value: 'elo' },
       { text: 'Wins', value: 'wins' },
       { text: 'Losses', value: 'losses' }
     ]
@@ -58,11 +58,13 @@ export default {
         .catch((err) => console.log(err))
     },
     async getLeaders (page, limit) {
-      let rank = 1 + ((page-1) * limit)
-      const q = { query: 'query usermany ($skip: Int, $limit: Int, $sort: SortFindManyUserInput) { ' +
+      let rank = 1 + ((page - 1) * limit)
+      const q = {
+        query: 'query usermany ($skip: Int, $limit: Int, $sort: SortFindManyUserInput) { ' +
           'userMany(sort: $sort, limit: $limit, skip: $skip) { _id, elo, wins, losses, updatedAt } }',
-        variables: { sort: this.leaders.order, skip: ((page-1) * limit), limit: limit },
-        operationName: 'usermany' }
+        variables: { sort: this.leaders.order, skip: ((page - 1) * limit), limit: limit },
+        operationName: 'usermany'
+      }
       fetch('/graphql', {
         method: 'post',
         headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
@@ -71,8 +73,8 @@ export default {
         .then((graphQlRes) => {
           if (graphQlRes.data) {
             this.leaders.leaderboard = []
-            for (let entry in graphQlRes.data.userMany) {
-              let record = graphQlRes.data.userMany[entry]
+            for (const entry in graphQlRes.data.userMany) {
+              const record = graphQlRes.data.userMany[entry]
               record.rank = rank++
               this.leaders.leaderboard.push(record)
             }
