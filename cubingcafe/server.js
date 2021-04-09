@@ -23,14 +23,15 @@ const sessionMiddleware = session({
   secret: 'heh super duper secret',
   resave: false,
   saveUninitialized: true,
-  cookie: { httpOnly: true, secure: true, sameSite: true }
+  cookie: { httpOnly: true, secure: true, sameSite: true, path: '/', }
 });
 
 const connectedUsers = [];
 
 // Create server
 const app = express();
-// app.set('trust proxy', 1);
+app.set('trust proxy', 1);
+
 let server;
 if (!process.env.PORT) {
   const privateKey = fs.readFileSync('server.key');
