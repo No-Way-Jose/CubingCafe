@@ -56,7 +56,7 @@ export default {
     if (username) this.$store.commit('setUserState', username)
   },
   methods: {
-    async logout() {
+    async logout () {
       const q = { query: 'mutation signout { signOut { completed } }', operationName: 'signout' }
       fetch('/graphql', {
         method: 'post',

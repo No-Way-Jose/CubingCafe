@@ -60,7 +60,7 @@ export default {
       { text: 'Time', value: 'time' },
       { text: 'Cube', value: 'size' },
       { text: 'Date', value: 'updatedAt' }
-      ],
+    ],
     solves: { max: 0, loading: true, order: 'UPDATEDAT_DESC', history: [] },
     userStats: { fav: '3 x 3', avg: 0, best: 0, worst: 0 }
   }),
@@ -98,11 +98,13 @@ export default {
         .catch((err) => console.error(err))
     },
     async getSolveHistory (page, limit) {
-      let id = 1 + ((page-1) * limit)
-      const q = { query: 'query solvemany ($skip: Int, $limit: Int, $sort: SortFindManySolveInput) { ' +
+      let id = 1 + ((page - 1) * limit)
+      const q = {
+        query: 'query solvemany ($skip: Int, $limit: Int, $sort: SortFindManySolveInput) { ' +
           'solveMany(sort: $sort, limit: $limit, skip: $skip) { time, size, updatedAt } }',
-        variables: { sort: this.solves.order, skip: ((page-1) * limit), limit: limit  },
-        operationName: 'solvemany' }
+        variables: { sort: this.solves.order, skip: ((page - 1) * limit), limit: limit },
+        operationName: 'solvemany'
+      }
       fetch('/graphql', {
         method: 'post',
         headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
@@ -111,11 +113,11 @@ export default {
         .then((graphQlRes) => {
           if (graphQlRes.data) {
             this.solves.history = []
-            for (let entry in graphQlRes.data.solveMany) {
-              let record = graphQlRes.data.solveMany[entry]
+            for (const entry in graphQlRes.data.solveMany) {
+              const record = graphQlRes.data.solveMany[entry]
               record.id = id++
               record.time = this.msToTime(record.time)
-              record.updatedAt = record.updatedAt.substring(0,10)
+              record.updatedAt = record.updatedAt.substring(0, 10)
               record.size = record.size.substring(1, 4)
               this.solves.history.push(record)
             }
@@ -141,8 +143,8 @@ export default {
             this.userStats.best = data[0].fastest
             this.userStats.avg = data[0].avg
 
-            for (let entry in data) {
-              let record = []
+            for (const entry in data) {
+              const record = []
               record.push(data[entry]._id.substring(1))
               record.push(data[entry].count)
               this.selectedChart.data.push(record)
@@ -169,7 +171,7 @@ export default {
       this.snackMessage.colour = colour
       this.snackMessage.message = message
       this.snackMessage.activate = true
-    },
+    }
   }
 }
 </script>

@@ -138,7 +138,7 @@ export default {
       2: { class: 'whiteBlock', limit: 9, idx: 2 },
       10: { class: 'yellowBlock', limit: 9, idx: 3 },
       5: { class: 'orangeBlock', limit: 9, idx: 4 },
-      8: { class: 'blueBlock', limit: 9, idx: 5 },
+      8: { class: 'blueBlock', limit: 9, idx: 5 }
     },
     options: [
       { label: 'Red', colour: 'red', value: 'redBlock' },
@@ -149,69 +149,69 @@ export default {
       { label: 'White', colour: 'grey', value: 'whiteBlock' }
     ],
     headers: [
-      { step: 'C: Cross', moves: 'cross'},
-      { step: 'F: F2L (First 2 Layers)', moves: 'f2l'},
-      { step: 'O: OLL (Orient Last Layer)', moves: 'oll'},
-      { step: 'P: PLL (Permute Last Layer)', moves: 'pll'}
-      ],
+      { step: 'C: Cross', moves: 'cross' },
+      { step: 'F: F2L (First 2 Layers)', moves: 'f2l' },
+      { step: 'O: OLL (Orient Last Layer)', moves: 'oll' },
+      { step: 'P: PLL (Permute Last Layer)', moves: 'pll' }
+    ],
     instructions: [],
     currentState: { alg: '', sol: '', states: { cross: '', f2l: '', oll: '', pll: '' } },
-    moveMask: { 'u\'': '2Uw\'', 'u': '2Uw', 'b': '2Bw', 'b\'': '2Bw\'', 'd': '2Dw', 'd\'': '2Dw\'' },
+    moveMask: { 'u\'': '2Uw\'', u: '2Uw', b: '2Bw', 'b\'': '2Bw\'', d: '2Dw', 'd\'': '2Dw\'' },
     snackMessage: { activate: false, message: null, colour: 'error', timeout: 5000 },
     scrambleInput: null,
     validMoves: 'RLBDUF'
   }),
   methods: {
     performMove (move, counterClockwise) {
-      const moveToFace = { 'R': 7, 'L': 5, 'U': 2, 'D': 10, 'F': 6, 'B': 8 }
+      const moveToFace = { R: 7, L: 5, U: 2, D: 10, F: 6, B: 8 }
       let face = moveToFace[move]
       const faceRotation = [[1, 3], [2, 6], [3, 9], [6, 8], [9, 7], [8, 4], [7, 1], [4, 2]]
-      let faceColours = []
+      const faceColours = []
       for (let i = 1; i < 10; i++) {
         const block = String(face) + '-' + String(i)
         faceColours.push(this.$refs[block][0].className)
       }
       faceRotation.forEach((item) => {
-        let target = counterClockwise ? 0 : 1
-        let source = counterClockwise ? 1 : 0
+        const target = counterClockwise ? 0 : 1
+        const source = counterClockwise ? 1 : 0
         const block = String(face) + '-' + String(item[target])
-        this.$refs[block][0].className = faceColours[item[source]-1]
-      });
+        this.$refs[block][0].className = faceColours[item[source] - 1]
+      })
 
       const rotateMapping = {
-        2: { 'g': [1,2,3], 'o': [1,2,3], 'b': [1,2,3], 'r': [1,2,3] },
-        5: { 'b': [3,6,9], 'w': [7,4,1], 'g': [7,4,1], 'y': [7,4,1] },
-        6: { 'o': [3,6,9], 'w': [9,8,7], 'r': [7,4,1], 'y': [1,2,3] },
-        7: { 'g': [3,6,9], 'w': [3,6,9], 'b': [7,4,1], 'y': [3,6,9] },
-        8: { 'r': [3,6,9], 'w': [1,2,3], 'o': [7,4,1], 'y': [9,8,7] },
-        10: { 'o': [9,8,7], 'g': [9,8,7], 'r': [9,8,7], 'b': [9,8,7] },
+        2: { g: [1, 2, 3], o: [1, 2, 3], b: [1, 2, 3], r: [1, 2, 3] },
+        5: { b: [3, 6, 9], w: [7, 4, 1], g: [7, 4, 1], y: [7, 4, 1] },
+        6: { o: [3, 6, 9], w: [9, 8, 7], r: [7, 4, 1], y: [1, 2, 3] },
+        7: { g: [3, 6, 9], w: [3, 6, 9], b: [7, 4, 1], y: [3, 6, 9] },
+        8: { r: [3, 6, 9], w: [1, 2, 3], o: [7, 4, 1], y: [9, 8, 7] },
+        10: { o: [9, 8, 7], g: [9, 8, 7], r: [9, 8, 7], b: [9, 8, 7] }
       }
 
-      let firstFace = null;  // use this to know the key for the starting face
-      let currFaceColours = [null, null, null];
-      let prevFaceColours = [null, null, null];
+      let firstFace = null // use this to know the key for the starting face
+      const currFaceColours = [null, null, null]
+      let prevFaceColours = [null, null, null]
 
-      const positionsToMove = rotateMapping[face];
-      let faceSequence = Object.keys(positionsToMove);
+      const positionsToMove = rotateMapping[face]
+      const faceSequence = Object.keys(positionsToMove)
       if (counterClockwise) {
-          faceSequence.reverse();
+        faceSequence.reverse()
       }
       faceSequence.forEach((currFace) => {
-        face = Object.keys(this.colours).find(key => this.colours[key].class.substring(0,1) === currFace)
-        prevFaceColours = [...currFaceColours];
+        face = Object.keys(this.colours).find(key => this.colours[key].class.substring(0, 1) === currFace)
+        prevFaceColours = [...currFaceColours]
         for (let i = 0; i < 3; i++) {
           const block = String(face) + '-' + String(positionsToMove[currFace][i])
-          currFaceColours[i] = this.$refs[block][0].className;
+          currFaceColours[i] = this.$refs[block][0].className
         }
-        if (!firstFace) firstFace = currFace;
+        if (!firstFace) firstFace = currFace
         else {
-            for (let i = 0; i < 3; i++) {
-              const block = String(face) + '-' + String(positionsToMove[currFace][i])
-              this.$refs[block][0].className = prevFaceColours[i]
-            }
+          for (let i = 0; i < 3; i++) {
+            const block = String(face) + '-' + String(positionsToMove[currFace][i])
+            this.$refs[block][0].className = prevFaceColours[i]
+          }
         }
-      });
-      face = Object.keys(this.colours).find(key => this.colours[key].class.substring(0,1) === firstFace)
+      })
+      face = Object.keys(this.colours).find(key => this.colours[key].class.substring(0, 1) === firstFace)
       for (let i = 0; i < 3; i++) {
         const block = String(face) + '-' + String(positionsToMove[firstFace][i])
         this.$refs[block][0].className = currFaceColours[i]
@@ -222,7 +222,7 @@ export default {
       if (this.scrambleInput) {
         this.scrambleInput.trim().split(' ').forEach((move) => {
           move = move.trim()
-          let moveFace = move.length === 1 ? move : move[0];
+          const moveFace = move.length === 1 ? move : move[0]
           if (this.validMoves.includes(moveFace)) {
             let double = false
             let counterClockwise = false
@@ -230,12 +230,12 @@ export default {
               counterClockwise = move[1] === '\''
               double = move[1] === '2'
             }
-            if (double) this.performMove(moveFace, counterClockwise);
-            this.performMove(moveFace, counterClockwise);
+            if (double) this.performMove(moveFace, counterClockwise)
+            this.performMove(moveFace, counterClockwise)
           } else {
             this.showSnack('ERROR: The scramble string contained invalid moves!', 'error')
           }
-        });
+        })
       } else {
         this.showSnack('INFO: No scramble string was passed in!', 'info')
       }
@@ -266,19 +266,19 @@ export default {
       for (const key in this.colours) {
         for (let i = 1; i < 10; i++) {
           const block = String(key) + '-' + String(i)
-          data[this.colours[key].idx] += (map[this.$refs[block][0].className.substring(6).replaceAll('Block','').trim()])
+          data[this.colours[key].idx] += (map[this.$refs[block][0].className.substring(6).replaceAll('Block', '').trim()])
         }
       }
-      //const x = ["flulfbddr", "rudrruddl", "dbbburrfb", "llffdrubf", "rludlubrf", "lubfbfudl"]
+      // const x = ["flulfbddr", "rudrruddl", "dbbburrfb", "llffdrubf", "rludlubrf", "lubfbfudl"]
       let solution = ''
       try {
         solution = solver(data.join(''), { partitioned: true })
         // Reformat solution
-        const reverseMap = { 'R': 'L', 'L': 'R', 'U': 'D', 'D': 'U', 'd': 'u', 'u': 'd' }
+        const reverseMap = { R: 'L', L: 'R', U: 'D', D: 'U', d: 'u', u: 'd' }
         for (const step in solution) {
           if (step === 'cross' || step === 'f2l') {
             if (step === 'f2l') this.currentState.states[step] += this.currentState.states.cross
-            for (let j=0; j < solution[step].length; j++) {
+            for (let j = 0; j < solution[step].length; j++) {
               let str = solution[step][j].replaceAll('prime', "'")
 
               str = this.convertAlg(str, reverseMap)
@@ -288,7 +288,7 @@ export default {
             }
           } else {
             let str = solution[step].replaceAll('prime', "'")
-            for (let i=0; i<str.length; i++) {
+            for (let i = 0; i < str.length; i++) {
               str = reverseMap[str[i]] ? str.substring(0, i) + reverseMap[str[i]] + str.substring(i + 1) : str
             }
             solution[step] = [str]
@@ -312,15 +312,15 @@ export default {
       }
     },
     convertAlg (theString, mapping) {
-      for (let i=0; i<theString.length; i++) {
+      for (let i = 0; i < theString.length; i++) {
         theString = mapping[theString[i]] ? theString.substring(0, i) + mapping[theString[i]] + theString.substring(i + 1) : theString
       }
       return theString
     },
     createAlgString (moves) {
       // Add to currentState for visualizer
-      let split = moves.split(' ')
-      for (let k=0; k<split.length-1; k++) {
+      const split = moves.split(' ')
+      for (let k = 0; k < split.length - 1; k++) {
         if (split[k].includes('\'')) {
           split[k] = split[k].slice(0, split[k].length - 1)
         } else {

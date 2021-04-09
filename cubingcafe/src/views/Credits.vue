@@ -26,7 +26,7 @@ export default {
       { title: 'Mongoose', link: 'https://mongoosejs.com/', colour: 'warning' },
       { title: 'Vue', link: 'https://vuejs.org/', colour: 'green' },
       { title: 'GraphQL', link: 'https://graphql.org/', colour: 'pink' },
-      { title: 'Express', link: 'https://expressjs.com/', colour: 'red' },
+      { title: 'Express', link: 'https://expressjs.com/', colour: 'red' }
     ],
     thanks: [
       {
@@ -46,7 +46,7 @@ export default {
       }
     ]
   }),
-  methods : {
+  methods: {
     viewLink (link) {
       window.open(link)
     }
