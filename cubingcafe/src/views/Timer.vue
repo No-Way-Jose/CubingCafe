@@ -2,13 +2,6 @@
 
   <v-container class="timerContainer">
     <v-col>
-      <v-row>
-        <v-tabs centered>
-          <v-tabs-slider></v-tabs-slider>
-          <v-tab href="#tab-1" @click="swapMode('stopwatch')"><v-icon class="mr-3">mdi-timer-outline</v-icon>Stopwatch</v-tab>
-          <v-tab href="#tab-2" @click="swapMode('countdown')"><v-icon class="mr-3">mdi-timer-sand</v-icon>Timer</v-tab>
-        </v-tabs>
-      </v-row>
       <v-row align="center" class="mt-0">
         <v-col>
           <v-menu transition="slide-y-transition" :offset-y="true" bottom>
@@ -25,9 +18,6 @@
             </v-list>
           </v-menu>
         </v-col>
-        <v-col v-if="mode === 'countdown'" class="countInput">
-          <v-text-field v-model="duration" label="Time in seconds..." outlined rounded></v-text-field>
-        </v-col>
         <v-col class="alignRight">
           <v-menu transition="slide-y-transition" :offset-y="true" bottom>
             <template v-slot:activator="{ on }">
@@ -42,9 +32,9 @@
         </v-col>
       </v-row>
       <v-row class="timerRow">
-        <TimerVue ref="timer" allow-overflow v-bind:type="mode" v-bind:length="countdownTime" v-slot="{ time, isDone }">
+        <TimerVue ref="timer" allow-overflow type="stopwatch" v-slot="{ time }">
           <div ref="timerDisplay" class="timeFont">
-            <span :class="{ 'flash': isDone }">
+            <span>
                 <span>{{ time.m }}m </span>
                 <span>{{ time.s }}s </span>
                 <span>{{ time.ms }}ms</span>
@@ -89,7 +79,6 @@ export default {
     TimerVue
   },
   data: () => ({
-    mode: 'stopwatch',
     actionEvent: true,
     duration: 3600,
     mobile: isMobile,
@@ -124,11 +113,6 @@ export default {
   destroyed () {
     window.removeEventListener('keydown', this.toggleClock)
     window.removeEventListener('keyup', this.toggleClock)
-  },
-  computed: {
-    countdownTime: function () {
-      return this.duration * 1000
-    }
   },
   methods: {
     formatTime (time) {
@@ -223,15 +207,6 @@ export default {
           }
         })
         .catch((err) => console.error(err))
-    },
-    swapMode (mode) {
-      this.mode = mode
-      if (mode === 'stopwatch') {
-        this.duration = 3600
-      } else {
-        this.duration = 0
-      }
-      this.$refs.timer.reset()
     },
     toggleClock (event) {
       const state = this.$refs.timer.state
@@ -333,14 +308,14 @@ export default {
   .timerRow {
     text-align: center;
     justify-content: center;
-    padding-top: 12vh;
+    padding-top: 15vh;
   }
   .history {
     max-height: 50vh;
     overflow-y: auto;
   }
   .statsRow {
-    padding-top: 22vh;
+    padding-top: 25vh;
   }
   .alignRight {
     text-align: right;

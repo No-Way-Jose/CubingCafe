@@ -168,7 +168,7 @@ export default {
   .loginContainer{
     margin-bottom: 20vh;
     padding: 6vh 10% 0 10%;
-    max-width: 850px;
+    max-width: 900px;
   }
   .methodBtn{
     color: white;

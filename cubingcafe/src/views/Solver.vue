@@ -343,7 +343,7 @@ export default {
       this.generatePreview(this.currentState.alg)
     },
     scrollTo (section) {
-      return { element: '#' + section, offset: -120 }
+      return { element: '#' + section, offset: -100 }
     },
     reset () {
       for (const key in this.colours) {

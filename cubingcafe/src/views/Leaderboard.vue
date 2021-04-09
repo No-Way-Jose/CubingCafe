@@ -7,9 +7,6 @@
       <v-row><h1>Global Rankings</h1><v-icon x-large color="warning" class="ml-4">mdi-trophy</v-icon></v-row>
       <v-data-table :headers="headers" :items="leaders.leaderboard" class="pt-12"
                     @update:options="updateBoard" :server-items-length="leaders.max" :loading="leaders.loading">
-        <template v-slot:header.name="{ header }">
-          {{ header.text.toUpperCase() }}
-        </template>
       </v-data-table>
     </v-col>
   </v-container>

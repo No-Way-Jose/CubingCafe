@@ -25,8 +25,8 @@
       <v-footer class="font-weight-medium pa-0" style="justify-content: center" elevation="9" color="#1791e8">
         <v-row class="footerBar ma-0">
           <v-row class="ma-1" justify="center">
-            <strong class="pt-3 footerText">Copyright © {{ new Date().getFullYear() }}  CubingCafe. All rights reserved.</strong>
-            <p class="pt-3 ml-2 footerText creditsLink" v-on:click="$router.push('/credits')">Credits</p>
+            <strong class="pt-4 footerText">Copyright © {{ new Date().getFullYear() }}  CubingCafe. All rights reserved.</strong>
+            <p class="pt-4 ml-2 footerText creditsLink" v-on:click="$router.push('/credits')">Credits</p>
           </v-row>
         </v-row>
       </v-footer>
