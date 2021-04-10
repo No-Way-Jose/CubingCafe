@@ -28,12 +28,15 @@ const api = (function () {
       navigator.mediaDevices.getUserMedia({ audio: false, video: true })
         .then((stream) => {
           localStream = stream
+          localStream.getVideoTracks()[0].onended = () => {
+            localStream = null
+            notifyLocalStreamListeners()
+          }
           notifyLocalStreamListeners()
-          // cb(localStream)
         })
         .catch((e) => {
           console.error(e)
-          cb()
+          notifyLocalStreamListeners()
         })
     }
   }

@@ -358,6 +358,8 @@ export default {
         this.disableFind = false
       } else {
         this.showSnack('ALERT: Connect or enable webcam permissions! ')
+        this.disableFind = true
+        if (!this.waiting || this.opponentVideo) this.disconnect(false)
       }
     },
     showSnack (message) {
@@ -372,7 +374,7 @@ export default {
   @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
   .versusContainer {
     max-width: 1400px;
-    padding: 20px 50px 0 50px;
+    padding: 50px;
   }
   video {
     width: 100%;
