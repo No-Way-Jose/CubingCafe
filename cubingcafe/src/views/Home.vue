@@ -1,6 +1,6 @@
 <template>
   <v-container class="homeContainer">
-    <v-row>
+    <v-row class="logoRow">
       <v-col cols="6">
         <h1 class="homeText">Cubing Cafe</h1>
       </v-col>
@@ -37,10 +37,12 @@ export default {
     position: absolute;
   }
   .logoCol {
-    max-height: 95vh;
     padding-top: 8.5%;
     z-index: 1;
     text-align: center;
+  }
+  .logoRow {
+    margin-bottom: 10vh;
   }
 
 </style>

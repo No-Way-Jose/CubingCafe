@@ -217,5 +217,8 @@ export default {
   .snackMessage {
     margin-top: 85px;
   }
+  .centreTxt {
+    text-align: center;
+  }
 
 </style>

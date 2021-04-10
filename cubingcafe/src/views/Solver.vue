@@ -359,6 +359,7 @@ export default {
       Object.keys(this.colours).forEach((colour) => {
         this.colours[colour].limit = 9
       })
+      this.disableSolve = false
     }
   }
 }
