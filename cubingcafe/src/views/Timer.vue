@@ -100,6 +100,7 @@ export default {
     next(vm => {
       if (vm.$store.state.user.loggedIn) {
         vm.timerData = vm.$store.state.data.timer
+        vm.getLastSize()
         if (vm.timerData.sessionID === '') vm.getLastSession()
       } else {
         vm.timerData = { sessionID: '', history: [], best: 0, avg5: 0, avg12: 0 }
@@ -161,6 +162,13 @@ export default {
         })
         .catch((err) => console.error(err))
     },
+    getLastSize () {
+      if (this.timerData.history.length > 0) {
+        this.selectedSize = this.size.find(obj => {
+          return obj.title === this.timerData.history[0].size
+        })
+      }
+    },
     async getLastSolves () {
       const q = {
         query: 'query solvemany ($session: MongoID) { solveMany(filter: { session: $session }, sort:UPDATEDAT_DESC)  { time, size } }',
@@ -178,9 +186,7 @@ export default {
               return { time: obj.time, size: obj.size.substring(1).replace('x', ' x ') }
             })
             this.updateStats()
-            this.selectedSize = this.size.find(obj => {
-              return obj.title === this.timerData.history[0].size
-            })
+            this.getLastSize()
           } else {
             this.showSnack(graphQlRes.errors[0].message)
           }
