@@ -32,7 +32,8 @@ const api = (function () {
           // cb(localStream)
         })
         .catch((e) => {
-          cb(localStream)
+          console.error(e)
+          cb()
         })
     }
   }

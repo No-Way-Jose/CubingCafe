@@ -53,7 +53,7 @@
       </v-row>
 
       <v-row class="py-8" justify="center">
-        <v-btn ref="connect" @click="connect" v-if="waiting" color="primary">Find Match</v-btn>
+        <v-btn ref="connect" @click="connect" v-if="waiting" v-bind:disabled="disableFind" color="primary">Find Match</v-btn>
         <v-btn ref="disconnect" @click="disconnect" v-if="!waiting" color="red" class="dcBtn">{{ discBtnTxt }}</v-btn>
       </v-row>
     </v-col>
@@ -71,6 +71,7 @@ export default {
   name: 'Versus',
   data: () => ({
     waiting: true,
+    disableFind: true,
     keysPressed: {},
     showStart: false,
     queueSize: '',
@@ -351,9 +352,12 @@ export default {
           break
       }
     },
-    localStreamUpdate (stream) {
+    localStreamUpdate (stream = null) {
       if (stream) {
         this.$refs.localVideo.srcObject = stream
+        this.disableFind = false
+      } else {
+        this.showSnack('ALERT: Connect or enable webcam permissions! ')
       }
     },
     showSnack (message) {
