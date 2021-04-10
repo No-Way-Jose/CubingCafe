@@ -26,7 +26,7 @@ Users are able to input their cube scramble in two ways:
 - Manually: Which is when the user manually selects each individual colour and arranges them on the map
 - Scramble String: Users are also able to paste in a scramble string that they have
 
-After inputting the desired cube scramble, the application will generate the solution and brake it down into 4 main steps. Corners, first 2 layers, orient last layer, permute last layer. Thie method is also known as CFOP which is the most popular solving method for beginners and intermediates. At each step users are able to see a 3D visualization of the cube and can view and rotate the cube at each step to make sure they are on the right track.
+After inputting the desired cube scramble, the application will generate the solution and brake it down into 4 main steps. Corners, first 2 layers, orient last layer, permute last layer. This method is also known as CFOP which is the most popular solving method for beginners and intermediates. At each step users are able to see a 3D visualization of the cube and can view and rotate the cube at each step to make sure they are on the right track.
 
 A handy notation cheat sheet is also provided for beginners who may not know the formal rotation notations.
 
@@ -64,7 +64,7 @@ The profile page is where users can view the following information:
 - Cube Demographic: Visual breakdown of the users history based on cube size
 
 
-### Leaderboards
+### Leaderboard
 
 Global leaderboard associated with the online versus feature where users can view their raking amongst others.
 - Available sort options: **Elo, Wins, Losses**
