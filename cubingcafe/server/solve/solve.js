@@ -29,7 +29,7 @@ sessionSchema.statics.getSession = function (username) {
 solveSchema.statics.getStats = function (username) {
   return this.aggregate([
     { $match: { user: username } },
-    { $group: { _id: "$size", slowest: { $max: "$time"}, fastest: { $min: "$time" }, avg: { $avg: "$time" }, count: { $sum: 1 } } },
+    { $group: { _id: '$size', slowest: { $max: '$time' }, fastest: { $min: '$time' }, avg: { $avg: '$time' }, count: { $sum: 1 } } },
     { $sort: { count: -1 } }]);
 };
 
