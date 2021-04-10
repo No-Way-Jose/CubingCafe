@@ -264,12 +264,6 @@ export default {
       // Update best
       if (this.timerData.history.length >= 1) {
         this.timerData.best = Math.min(...history)
-        /*
-        this.timerData.best = this.timerData.history.reduce(function (p, { time }) {
-          return (p < time ? p : time)
-        })
-
-         */
       }
       // Update avg 5
       if (this.timerData.history.length >= 5) {
@@ -317,14 +311,14 @@ export default {
   .timerRow {
     text-align: center;
     justify-content: center;
-    padding-top: 15vh;
+    padding-top: 12vh;
   }
   .history {
     max-height: 50vh;
     overflow-y: auto;
   }
   .statsRow {
-    padding-top: 25vh;
+    padding-top: 23vh;
   }
   .alignRight {
     text-align: right;
@@ -363,6 +357,7 @@ export default {
   .newSession {
     color: #0275d8;
     font-weight: bold;
+    text-align: center;
   }
   .snackMessage {
     margin-top: 85px;
