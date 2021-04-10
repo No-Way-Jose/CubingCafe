@@ -1,9 +1,10 @@
 {
-    "engines": {
-        "node": ">=10.16.0"
-    },
-    "scripts": {
-      "heroku-prebuild": "cd cubingcafe && npm install && npm run build",
-      "start": "cd cubingcafe && node server.js"
-    }
-  }
+  "engines": {
+      "node": ">=10.16.0"
+  },
+  "scripts": {
+    "heroku-prebuild": "cd cubingcafe && npm install && npm run build",
+    "start": "cd cubingcafe && node server.js"
+  },
+  "cacheDirectories": ["cubingcafe/node_modules"]
+}
