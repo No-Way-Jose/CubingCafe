@@ -3,7 +3,20 @@ const { composeWithMongoose } = require('graphql-compose-mongoose');
 
 const UserModel = require('./user');
 
-const UserTC = composeWithMongoose(UserModel, { removeFields: ['hash', 'salt'] });
+const UserTC = composeWithMongoose(UserModel, {
+  removeFields: ['hash', 'salt'],
+  resolvers: {
+    findMany: {
+      filter: {
+        operators: {
+          elo: ['gte', 'gt', 'lt', 'lte'],
+          losses: ['gte', 'gt', 'lt', 'lte'],
+          wins: ['gte', 'gt', 'lt', 'lte']
+        }
+      }
+    }
+  }
+});
 
 schemaComposer.createObjectTC({
   name: 'LoggedInUser',
