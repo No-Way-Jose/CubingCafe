@@ -9,7 +9,7 @@ const { MatchTC, QueueTC } = require('../match');
 const isAuthenticated = async (resolve, source, args, context, info) => {
   const user = context.session.username;
 
-  if (!user) { return Promise.reject(new Error('You must be logged in for this action')); }
+  if (!user) { return Promise.reject(new Error('Error: You must be logged in for this action')); }
 
   return resolve(source, args, context, info);
 };
@@ -18,7 +18,7 @@ const setUserInFilter = async (resolve, source, args, context, info) => {
   const user = context.session.username;
   if (args.filter) {
     if (args.filter.user && args.filter.user !== user) {
-      return Promise.reject(new Error('Access denied'));
+      return Promise.reject(new Error('Error: Access denied'));
     }
     args.filter.user = user;
   } else {
@@ -56,7 +56,7 @@ schemaComposer.Query.addFields({
   queueMany: QueueTC.getResolver('findMany', [isAuthenticated]),
   userWinsOrLosses: MatchTC.getResolver('findUserWinsOrLosses', [isAuthenticated]),
   getStats: SolveTC.getResolver('getStats', [isAuthenticated]),
-  solveCount: SolveTC.getResolver('count', [isAuthenticated, setUserInFilter])
+  solveCount: SolveTC.getResolver('count', [isAuthenticated])
 });
 
 schemaComposer.Mutation.addFields({
