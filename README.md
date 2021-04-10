@@ -8,7 +8,10 @@
 
 - Website: https://thecubingcafe.herokuapp.com/
 - YouTube Demo: https://youtu.be/3gsi5rDXtzQ
-- API Documentation: [README.md](./api_docs)
+- API Documentation:
+    - Simplified type definitions and examples can be found in this [README.md](./api_docs/README.md)
+    - Sandbox with detailed type definitions accessible in the upper right corner can be found [here](https://thecubingcafe.herokuapp.com/graphql)
+
 
 ## What is Cubing Cafe?
 
@@ -26,7 +29,7 @@ Users are able to input their cube scramble in two ways:
 - Manually: Which is when the user manually selects each individual colour and arranges them on the map
 - Scramble String: Users are also able to paste in a scramble string that they have
 
-After inputting the desired cube scramble, the application will generate the solution and brake it down into 4 main steps. Corners, first 2 layers, orient last layer, permute last layer. This method is also known as CFOP which is the most popular solving method for beginners and intermediates. At each step users are able to see a 3D visualization of the cube and can view and rotate the cube at each step to make sure they are on the right track.
+After inputting the desired cube scramble, the application will generate the solution and break it down into 4 main steps. Cross, first 2 layers, orient last layer, permute last layer. This method is also known as CFOP which is the most popular solving method for beginners and intermediates. At each step users are able to see a 3D visualization of the cube and can view and rotate the cube at each step to make sure they are on the right track.
 
 A handy notation cheat sheet is also provided for beginners who may not know the formal rotation notations.
 
@@ -35,7 +38,7 @@ A handy notation cheat sheet is also provided for beginners who may not know the
 
 Geared for all levels, the timer is a way for users to track their solves and progress they make along the way. The timer revolves around sessions and so when a user returns to the page, all saved times for the most recent session are automatically loaded and the default cube size is set the last solved cube size for the session.
 
-Solves are generated automatically for each new time and users can choose of whether or not to use it. Additionally, all solves are viewable as a picture when hovered over with the mouse.
+Scrambles are generated automatically for each new time and users can choose whether or not to use it. Additionally, all scrambles are viewable as a picture when hovered over with the mouse.
 
 - Viewable Stats: **Best Time, Last 5 avg, Last 12 avg**
 
@@ -66,7 +69,7 @@ The profile page is where users can view the following information:
 
 ### Leaderboard
 
-Global leaderboard associated with the online versus feature where users can view their raking amongst others.
+Global leaderboard associated with the online versus feature where users can view their ranking amongst others.
 - Available sort options: **Elo, Wins, Losses**
 
 
@@ -83,7 +86,8 @@ Global leaderboard associated with the online versus feature where users can vie
 
 ## Technical Challenges
 
+The following were described in more detail in our survey submission:
+
 - GraphQL implementation and integration with mongoose and express
 - WebRTC and peerJS utilization and user match making
 - Vue lifecycle & Vuex state management
-
