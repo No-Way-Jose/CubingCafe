@@ -13,7 +13,7 @@
                 <v-list-item-title class="newSession">New Session</v-list-item-title>
               </v-list-item>
               <v-list-item v-for="(time, idx) in timerData.history" :key="idx">
-                <v-list-item-title>{{ formatTime(time) }}</v-list-item-title>
+                <v-list-item-title>{{ formatTime(time.time) }} - {{ time.size }}</v-list-item-title>
               </v-list-item>
             </v-list>
           </v-menu>
@@ -163,7 +163,7 @@ export default {
     },
     async getLastSolves () {
       const q = {
-        query: 'query solvemany ($session: MongoID) { solveMany(filter: { session: $session })  { time } }',
+        query: 'query solvemany ($session: MongoID) { solveMany(filter: { session: $session }, sort:UPDATEDAT_DESC)  { time, size } }',
         variables: { session: this.timerData.sessionID },
         operationName: 'solvemany'
       }
@@ -174,10 +174,13 @@ export default {
       }).then((response) => response.json())
         .then((graphQlRes) => {
           if (graphQlRes.data) {
-            this.timerData.history = graphQlRes.data.solveMany.reverse().map(function (obj) {
-              return obj.time
+            this.timerData.history = graphQlRes.data.solveMany.map(function (obj) {
+              return { time: obj.time, size: obj.size.substring(1).replace('x', ' x ') }
             })
             this.updateStats()
+            this.selectedSize = this.size.find(obj => {
+              return obj.title === this.timerData.history[0].size
+            })
           } else {
             this.showSnack(graphQlRes.errors[0].message)
           }
@@ -200,7 +203,7 @@ export default {
       }).then((response) => response.json())
         .then((graphQlRes) => {
           if (graphQlRes.data) {
-            this.timerData.history.unshift(time)
+            this.timerData.history.unshift({ time: time, size: this.selectedSize.title })
             this.updateStats()
           } else {
             this.showSnack(graphQlRes.errors[0].message)
@@ -213,7 +216,7 @@ export default {
       if (this.mobile) {
         if (state === 'running') {
           this.$refs.timer.stop()
-          this.timerData.history.unshift(this.$refs.timer.timeElapsed)
+          this.timerData.history.unshift({ time: this.$refs.timer.timeElapsed, size: this.selectedSize.title })
         } else if (state === 'stopped') {
           this.$refs.timer.start()
         }
@@ -230,13 +233,11 @@ export default {
           this.actionEvent = false
         }
       } else if (event.keyCode === 13 && event.type === 'keydown') {
-        if (this.mode === 'stopwatch') {
-          if (this.$store.state.user.loggedIn) {
-            this.saveTime(this.$refs.timer.timeElapsed)
-          } else {
-            this.timerData.history.unshift(this.$refs.timer.timeElapsed)
-            this.updateStats()
-          }
+        if (this.$store.state.user.loggedIn) {
+          this.saveTime(this.$refs.timer.timeElapsed)
+        } else {
+          this.timerData.history.unshift({ time: this.$refs.timer.timeElapsed, size: this.selectedSize.title })
+          this.updateStats()
         }
         this.$refs.timer.reset()
         this.actionEvent = true
@@ -258,17 +259,25 @@ export default {
       this.timerData.best = 0
       this.timerData.avg5 = 0
       this.timerData.avg12 = 0
+
+      const history = this.timerData.history.map(({ time }) => time)
       // Update best
       if (this.timerData.history.length >= 1) {
-        this.timerData.best = Math.min(...this.timerData.history)
+        this.timerData.best = Math.min(...history)
+        /*
+        this.timerData.best = this.timerData.history.reduce(function (p, { time }) {
+          return (p < time ? p : time)
+        })
+
+         */
       }
       // Update avg 5
       if (this.timerData.history.length >= 5) {
-        this.timerData.avg5 = Math.floor((this.timerData.history.slice(-5).reduce((sum, time) => sum + time) / 5))
+        this.timerData.avg5 = Math.floor((history.slice(-5).reduce((sum, time) => sum + time) / 5))
       }
       // Update avg 12
       if (this.timerData.history.length >= 12) {
-        this.timerData.avg12 = Math.floor((this.timerData.history.slice(-12).reduce((sum, time) => sum + time)) / 12)
+        this.timerData.avg12 = Math.floor((history.slice(-12).reduce((sum, time) => sum + time)) / 12)
       }
     },
     msToTime (s) {
