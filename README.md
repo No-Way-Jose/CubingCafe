@@ -63,7 +63,7 @@ The profile page is where users can view the following information:
 - Quick Stats: Solve statistics for their favourite cube (Cube that has been solved the most)
 - History: Full history of all solves completed
     - Available filters: **Cube Size**
-    - Svailable sort options: **Solve time, cube size, solve date**
+    - Available sort options: **Solve time, cube size, solve date**
 - Cube Demographic: Visual breakdown of the users history based on cube size
 
 
@@ -78,7 +78,7 @@ Global leaderboard associated with the online versus feature where users can vie
 - **Heroku** to host the web application
 - **GraphQL** for building queries
 - **Vue** as the frontend framework of choice
-- **ExpressJS** to host run the backend
+- **ExpressJS** to run the backend
 - **Vuetify** for consistent styling of UI elements
 - **Vuex** for front-end state management
 - **MongoDB** for storing and maintaining user and application data
