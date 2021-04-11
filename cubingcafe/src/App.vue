@@ -2,7 +2,7 @@
   <v-app>
     <v-main>
       <v-app-bar height="90" class="px-5" elevation="0" color="white">
-        <v-toolbar-title class="mt-2 mr-6 pr-12" v-on:click="$router.push('/')">CubingCafe</v-toolbar-title>
+        <v-toolbar-title class="mt-2 mr-6 pr-12 homeLink" @click="navigation('/')">CubingCafe</v-toolbar-title>
         <router-link v-for="page in pages" :key="page.link" exact :to="page.link" class="mt-4 mb-2 mr-7">{{ page.page }}</router-link>
         <v-spacer/>
 
@@ -26,7 +26,7 @@
         <v-row class="footerBar ma-0">
           <v-row class="ma-1" justify="center">
             <strong class="pt-4 footerText">Copyright © {{ new Date().getFullYear() }}  CubingCafe. All rights reserved.</strong>
-            <p class="pt-4 ml-2 footerText creditsLink" v-on:click="$router.push('/credits')">Credits</p>
+            <p class="pt-4 ml-2 footerText creditsLink" @click="navigation('/credits')">Credits</p>
           </v-row>
         </v-row>
       </v-footer>
@@ -81,6 +81,13 @@ export default {
       } else {
         this.logout()
       }
+    },
+    navigation (page) {
+      if (page === '/' && this.$route.name !== 'home') {
+        this.$router.push('/')
+      } else if (page === '/credits' && this.$route.name !== 'credits') {
+        this.$router.push('/credits')
+      }
     }
   }
 }
@@ -91,6 +98,9 @@ export default {
     min-width: 100%;
     min-height: calc(100vh - 90px);
     padding-bottom: 25px;
+  }
+  .homeLink {
+    cursor: pointer;
   }
   .v-application a {
     font-weight: bold;
