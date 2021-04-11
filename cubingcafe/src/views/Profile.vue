@@ -165,7 +165,8 @@ export default {
         body: JSON.stringify(q)
       }).then((response) => response.json())
         .then((graphQlRes) => {
-          if (graphQlRes.data && graphQlRes.data.length > 0) {
+          if (graphQlRes.data) {
+            if (graphQlRes.data.length === 0) return
             const data = graphQlRes.data.getStats
             this.userStats.fav = data[0]._id.substring(1)
             this.userStats.worst = data[0].slowest
