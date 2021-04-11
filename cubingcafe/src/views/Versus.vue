@@ -110,8 +110,6 @@ export default {
     next(vm => {
       if (!vm.$store.state.user.loggedIn) {
         next('/login')
-      } else {
-        next()
       }
     })
   },

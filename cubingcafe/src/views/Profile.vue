@@ -84,7 +84,11 @@ export default {
   }),
   beforeRouteEnter (to, from, next) {
     next(vm => {
-      vm.getUserStats()
+      if (!vm.$store.state.user.loggedIn) {
+        next('/login')
+      } else {
+        vm.getUserStats()
+      }
     })
   },
   methods: {
@@ -166,7 +170,7 @@ export default {
       }).then((response) => response.json())
         .then((graphQlRes) => {
           if (graphQlRes.data) {
-            if (graphQlRes.data.length === 0) return
+            if (graphQlRes.data.getStats.length === 0) return
             const data = graphQlRes.data.getStats
             this.userStats.fav = data[0]._id.substring(1)
             this.userStats.worst = data[0].slowest

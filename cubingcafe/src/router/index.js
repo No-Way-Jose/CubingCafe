@@ -1,6 +1,5 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import store from '../../store/store.js'
 import Home from '../views/Home.vue'
 
 Vue.use(VueRouter)
@@ -64,14 +63,6 @@ const router = new VueRouter({
   ],
   scrollBehavior (to, from, savedPosition) {
     return { x: 0, y: 0 }
-  }
-})
-
-router.beforeEach((to, from, next) => {
-  if ((to.name === 'myprofile') && !store.state.user.loggedIn) {
-    next('/login')
-  } else {
-    next()
   }
 })
 

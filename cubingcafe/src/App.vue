@@ -17,7 +17,7 @@
           </v-list>
         </v-menu>
 
-        <v-btn v-else elevation="0" v-on:click="$router.push('login')" color="transparent" rounded><v-icon class="mr-3" color="#1791e8">mdi-account</v-icon>Login</v-btn>
+        <v-btn v-else elevation="0" @click="navigation('/login')" color="transparent" rounded><v-icon class="mr-3" color="#1791e8">mdi-account</v-icon>Login</v-btn>
       </v-app-bar>
       <v-container class="contentContainer">
         <router-view/>
@@ -77,16 +77,17 @@ export default {
     executeOptions (option) {
       // Determine if navigating to new page or logging out
       if (option !== 'logout') {
-        this.$router.push(option)
+        this.navigation(option)
       } else {
         this.logout()
       }
     },
     navigation (page) {
+      // avoiding redundant navigation
       if (page === '/' && this.$route.name !== 'home') {
         this.$router.push('/')
-      } else if (page === '/credits' && this.$route.name !== 'credits') {
-        this.$router.push('/credits')
+      } else if (page !== '/' && page.substring(1) !== this.$route.name) {
+        this.$router.push(page)
       }
     }
   }
