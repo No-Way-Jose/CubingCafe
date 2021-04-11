@@ -37,7 +37,7 @@ Where `mutation` is the operation type, `signUp` is the operation, `username` an
 Variables can be used in query strings as well by doing the following:
 ```
 mutation ($username: String!, $password: String!) { 
-    signUp(username: $username, password: $username) {
+    signUp(username: $username, password: $password) {
         user
     }
 }
@@ -53,13 +53,13 @@ Then using a variables object in the body like so:
 Additionally multiple queries can be contained in the query string by providing a name to each operation like so:
 ```
 mutation createUser ($username: String!, $password: String!) { 
-    signUp(username: $username, password: $username) {
+    signUp(username: $username, password: $password) {
         user
     }
 }
 
 mutation logIn ($username: String!, $password: String!) { 
-    signIn(username: $username, password: $username) {
+    signIn(username: $username, password: $password) {
         user
     }
 }
