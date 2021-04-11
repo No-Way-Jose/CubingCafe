@@ -56,7 +56,7 @@ schemaComposer.Query.addFields({
   queueMany: QueueTC.getResolver('findMany', [isAuthenticated]),
   userWinsOrLosses: MatchTC.getResolver('findUserWinsOrLosses', [isAuthenticated]),
   getStats: SolveTC.getResolver('getStats', [isAuthenticated]),
-  solveCount: SolveTC.getResolver('count', [isAuthenticated])
+  solveCount: SolveTC.getResolver('count', [isAuthenticated, setUserInFilter])
 });
 
 schemaComposer.Mutation.addFields({
